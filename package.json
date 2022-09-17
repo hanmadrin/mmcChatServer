@@ -2,22 +2,23 @@
   "name": "websockets-playlist",
   "version": "1.0.0",
   "description": "A chat app using WebSockets",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "nodemon index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/iamshaunjp/websockets-playlist.git"
+    "url": "git+https://github.com/hanmadrin/mmcChatServer.git"
   },
-  "author": "The Net Ninja",
+  "author": "Md. Hasan Mahmud Rimon",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/iamshaunjp/websockets-playlist/issues"
-  },
-  "homepage": "https://github.com/iamshaunjp/websockets-playlist#readme",
   "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.0.2",
     "express": "^4.15.2",
+    "express-formidable": "^1.2.0",
+    "mysql2": "^2.3.3",
+    "sequelize": "^6.21.6",
     "socket.io": "^4.5.0"
   },
   "devDependencies": {
