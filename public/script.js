@@ -9,7 +9,9 @@ const globals = {
                 person : 'person',
                 url: 'text7',
                 status: 'status',
-
+            },
+            appraisalCounterBoard:{
+                status: 'status',
             }
         },
         statuses: {
@@ -19,153 +21,233 @@ const globals = {
                 bad: 4,
                 verifiedWithVin: 17,
             }
+        },
+        allStatuses: {
+            borEffortBoard:[
+
+                "Verified",
+                "BAD",
+                "Verified W/Vin",
+                "1st MSG",
+                "Raw Vin",
+                "MSG 1st Offer",
+                "Seller Counter",
+                "Multi-Counter",
+                "MSG Counter",
+                "BOR Form",
+                "BOR",
+                "I Passed",
+                "Vin# Bad",
+                "No Deal",
+                "Told To Pass",
+                "Will Send Vin",
+                "2nd 1st Msg",
+                "Auto Vin",
+                "Link Gone",
+                "Close Counter!",
+                "Manual",
+                "See Field Note",
+                "FlwUpOffer",
+                "Ghosted",
+                "VIN",
+                "See My Note",
+                "Unverified",
+                "Adj/Decline BOR- Pass",
+                "Pass",
+                "2nd BOR",
+                "Invalid Vin",
+                "Pass $",
+                "Initial Offer",
+                "Adj/Declined BOR- Pass",
+                "Close Initial Offer",
+                "BOR Confirmed",
+                "$To Acquire!"
+            ]
+        },
+        allColumnIds:{
+            borEffortBoard:{
+                // URL
+                "text7": {
+                    title: "URL",
+                    type: "url",
+                    editable: false
+                },
+                // Status
+                "status":{
+                    title: "Status",
+                    type: "status",
+                    editable: true
+                },
+                // Vin#
+                "text6":{
+                    title: "Vin#",
+                    type: "text",
+                    editable: true
+                },
+                // MMC Offer$
+                "numbers9":{
+                    title: "MMC Offer$",
+                    type: "number",
+                    editable: false
+                },
+                // Seller Counter$
+                "numbers7":{
+                    title: "Seller Counter$",
+                    type: "number",
+                    editable: true
+                },
+                // Apart From Counter
+                "formula":{
+                    title: "Apart From Counter",
+                    type: "number",
+                    editable: false
+                },
+                // Price$
+                "numbers4":{
+                    title: "Price$",
+                    type: "number",
+                    editable: false
+                },
+                // KBB Fair$
+                "numbers1":{
+                    title: "KBB Fair$",
+                    type: "number",
+                    editable: false
+                },
+                // KBB TIV
+                "numbers41":{
+                    title: "KBB TIV",
+                    type: "number",
+                    editable: false
+                },
+                // Apart From TIV
+                "formula7":{
+                    title: "Apart From TIV",
+                    type: "number",
+                    editable: false
+                },
+                // Ave Mkt Price$
+                "numbers6":{
+                    title: "Ave Mkt Price$",
+                    type: "number",
+                    editable: false
+                },
+                // JDP $
+                "numbers_19":{
+                    title: "JDP $",
+                    type: "number",
+                    editable: false
+                },
+                // Ave $ MMR
+                "numbers_2":{
+                    title: "Ave $ MMR",
+                    type: "number",
+                    editable: false
+                },
+                // Year
+                "text":{
+                    title: "Year",
+                    type: "text",
+                    editable: false
+                },
+                // Vehicle
+                "text_1":{
+                    title: "Vehicle",
+                    type: "text",
+                    editable: false
+                },
+                // Mileage
+                "text_2":{
+                    title: "Mileage",
+                    type: "text",
+                    editable: false
+                },
+                // State
+                "text_3":{
+                    title: "State",
+                    type: "text",
+                    editable: false
+                },
+                // List Code
+                "text5":{
+                    title: "List Code",
+                    type: "text",
+                    editable: false
+                }
+            }
         }
     },
 };
-const crossButton = ({size=30})=>{
-    const designCross = document.createElement('div');
-    const crossButton = document.createElement('div');
-    const designCrossFirst = document.createElement('div');
-    const designCrossSecond = document.createElement('div');
-    designCrossFirst.classList = 'first';
-    designCrossSecond.classList = 'second';
-    designCross.append(designCrossFirst, designCrossSecond);
-    designCross.classList = 'design-cross';
-    designCross.style.height = `${size}px`;
-    designCross.style.width = `${size}px`;
-    designCrossFirst.style.left = `${size/2-(size/100*3)}px`;
-    designCrossSecond.style.left = `${size/2-(size/100*3)}px`;
-    designCrossFirst.style.height = `${size}px`;
-    designCrossSecond.style.height = `${size}px`;
-    designCrossFirst.style.width = `${size/100*6}px`;
-    designCrossSecond.style.width = `${size/100*6}px`;
-    designCrossFirst.style.borderRadius = `${size/100*6}px`;
-    designCrossSecond.style.borderRadius = `${size/100*6}px`;
-    crossButton.classList = 'position-relative d-flex justify-content-center align-items-center cursor-pointer';
-    crossButton.style.height = `${size}px`;
-    crossButton.style.width = `${size}px`;
-    crossButton.append(designCross);
-    return crossButton;
-};
-const loaderCircle = ({size=30})=>{
-    const loaderCircle = document.createElement('div');
-    loaderCircle.classList = 'loader-circle';
-    loaderCircle.style.height = `${size}px`;
-    loaderCircle.style.width = `${size}px`;
-    loaderCircle.style.borderRadius = `${size}px`;
-    loaderCircle.style.borderTop = `${size/7.5}px solid blue`;
-    loaderCircle.style.borderRight = `${size/7.5}px solid green`;
-    loaderCircle.style.borderBottom = `${size/7.5}px solid red`;
-    loaderCircle.style.borderLeft = `${size/7.5}px solid pink`;
-    return loaderCircle;
-}
-const notify = async ({data,type})=>{
-    const neoNotify = document.createElement('div');
-    neoNotify.onclick = ()=>{
-        neoNotify.remove();
-    }
-    neoNotify.classList = 'position-fixed right-30px top-30px cursor-pointer';
-    const notification = document.createElement('div');
-    notification.classList = 'text-white p-10px border-radius-5px';
-    notification.classList.add(`bg-${type}`);
-    notification.innerText = data;
-    neoNotify.appendChild(notification);
-    document.body.appendChild(neoNotify);
-    await sleep(1200);
-    neoNotify.remove();
-};
-// document.body.append(crossButton({size:300}));
-// document.body.append(crossButton({size:20}));
-const mondayFetch = async (query) => {
-    const mondayResponse = await fetch (
-        `https://api.monday.com/v2`,
-        {
-            cache: "no-cache",
-            method: 'post',
-            headers:{
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('Authorization')
-            },
-            body: JSON.stringify({query})
-        }
-    );
-    return mondayResponse;
-}
-const validUser = async ()=>{
-    if(localStorage.getItem('Authorization')){
-        const query = `
-            query {
-                me {
-                    name,
-                    id,
-                    email
+
+// const ;
+const complexes = {
+    validUser: async ()=>{
+        if(localStorage.getItem('Authorization')){
+            const query = `
+                query {
+                    me {
+                        name,
+                        id,
+                        email
+                    }
                 }
+            `;
+            let mondayResponse = {};
+            try{
+                mondayResponse = await functions.mondayFetch(query);
+            }catch(e){
+                return false;
             }
-        `;
-        let mondayResponse = {};
-        try{
-            mondayResponse = await mondayFetch(query);
-        }catch(e){
-            return false;
-        }
-        if(mondayResponse.ok){
-            const mondayResponseJson = await mondayResponse.json();
-            localStorage.setItem('userId', mondayResponseJson.data.me.id);
-            localStorage.setItem('userName', mondayResponseJson.data.me.name || mondayResponseJson.data.me.email);
-            return true;
+            if(mondayResponse.ok){
+                const mondayResponseJson = await mondayResponse.json();
+                localStorage.setItem('userId', mondayResponseJson.data.me.id);
+                localStorage.setItem('userName', mondayResponseJson.data.me.name || mondayResponseJson.data.me.email);
+                return true;
+            }else{
+                // localStorage.removeItem('Authorization');
+                return false;
+            }
         }else{
-            // localStorage.removeItem('Authorization');
             return false;
         }
-    }else{
-        return false;
     }
 };
-
-
-const popupController = ({state,content,options={backDrop:true,removeButton:true}})=>{
-    const popup = document.getElementById('popup');
-    const removePopup = ()=>{
-        popup.classList = '';
-        popup.replaceChildren();
-    };
-    removePopup();
-    if(state){
-        popup.classList = 'h-100vh w-100vw d-flex flex-column justify-content-center align-items-center position-fixed top-0 left-0 bg-transparent';
-        const popupContent = document.createElement('div');
-        popupContent.append(content);
-        popupContent.classList = 'position-relative';
-        popup.append(popupContent);
-        if(options.removeButton){
-            const crossButtonHolder = document.createElement('div');
-            crossButtonHolder.classList = 'position-absolute top-0 right-0';
-            crossButtonHolder.append(crossButton({size:30}));
-            crossButtonHolder.addEventListener('click', ()=>{
-                removePopup();
-            });
-            popupContent.append(crossButtonHolder);
-        }
-        if(options.backDrop){
-            popup.addEventListener('click', ()=>{
-                removePopup();
-            });
-        }
-    }else{
-        
+const functions = {
+    mondayFetch: async (query) => {
+        const mondayResponse = await fetch (
+            `https://api.monday.com/v2`,
+            {
+                cache: "no-cache",
+                method: 'post',
+                headers:{
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem('Authorization')
+                },
+                body: JSON.stringify({query})
+            }
+        );
+        return mondayResponse;
+    },
+    sleep: async(ms)=>{
+        return new Promise(resolve=>{
+            setTimeout(resolve, ms);
+        });
     }
 };
-const sleep = async(ms)=>{
-    return new Promise(resolve=>{
-        setTimeout(resolve, ms);
-    });
-};
-
-const inititalSetup = ()=>{
-    const main = document.createElement('div');
-    main.id = 'main';
-    const popup = document.createElement('div');
-    popup.id = 'popup';
-    document.body.append(main, popup);
+const callbacks = {
+    selectAccountMultipleChoice: async (e)=>{
+        const fb_id = e.target.getAttribute('data-fb_id');
+        window.history.pushState({}, '', `/account/${fb_id}`);
+        controllers.popup({
+            state:true,
+            content: popups.loader(),
+            options: {
+                removeButton: false,
+                backDrop: false,
+            }
+        })
+        await view();
+    }
 };
 const popups = {
     login: ({state})=>{
@@ -196,13 +278,13 @@ const popups = {
         loginButton.innerText = 'Start with this API token';
         loginButton.addEventListener('click', async ()=>{
             if(loginInput.value){
-                popupController({state:true, content:popups.loader(), options:{backDrop:false,removeButton:false}});
+                controllers.popup({state:true, content:popups.loader(), options:{backDrop:false,removeButton:false}});
                 localStorage.setItem('Authorization', loginInput.value);
-                if(await validUser()){
-                    popupController({state:false});
-                    
+                if(await complexes.validUser()){
+                    await view();
+                    controllers.popup({state:false});
                 }else{
-                    popupController({state:true, content:popups.login({state:'error'}), options:{backDrop:false,removeButton:false}});
+                    controllers.popup({state:true, content:popups.login({state:'error'}), options:{backDrop:false,removeButton:false}});
                 }
             }
         });
@@ -210,22 +292,840 @@ const popups = {
         return content;
     },
     loader: ()=>{
-        return loaderCircle({size:40});
+        return components.loaderCircle({size:40});
+    },
+    multipleChoice: ({title, items, callback})=>{
+        const content = document.createElement('div');
+        content.classList = 'h-250px maxw-500px bg-dark box-shadow-dark border-radius-10px px-5px d-flex flex-column';
+        content.addEventListener('click', (e)=>{
+            e.stopPropagation();
+        });
+        const titleDiv = document.createElement('div');
+        titleDiv.classList = 'font-header text-center text-white w-100p py-10px mt-10px';
+        titleDiv.innerText = title;
+        const itemsDiv = document.createElement('div');
+        itemsDiv.classList = 'd-flex overflow-x-auto m-20px pb-20px';
+        for(let i=0;i<items.length;i+=3){
+            const columnHolder = document.createElement('div');
+            columnHolder.classList = 'd-flex flex-column align-items-center';
+            for(let j=i;j<i+3;j++){
+                if(items[j]){
+                    const itemButton = document.createElement('button');
+                    itemButton.classList = 'btn cursor-pointer border-radius-5px text-white bg-primary font-normal border-0 p-10px m-5px w-200px position-relative white-space-nowrap overflow-hidden text-overflow-ellipsis';
+                    itemButton.innerText = `(${items[j].total}) ${items[j].fb_user_name}`;
+                    itemButton.setAttribute('data-fb_id', items[j].fb_id);
+                    if(items[j].unseen>0){
+                        const unseenDiv = document.createElement('div');
+                        unseenDiv.classList = 'bg-danger border-round position-absolute top-0 right-0 font-normal text-white w-20px h-20px d-flex justify-content-center align-items-center';
+                        unseenDiv.innerText = items[j].unseen;
+                        itemButton.append(unseenDiv);
+                    }
+                    itemButton.onclick = callback;
+                    columnHolder.append(itemButton);
+                }
+            }
+            itemsDiv.append(columnHolder);
+        }
+        content.append(titleDiv, itemsDiv);
+        return content;
+    },
+    chooseStatus: ({title, options, callback})=>{
+        const content = document.createElement('div');
+        content.classList = 'h-250px maxw-500px bg-dark box-shadow-dark border-radius-10px px-5px d-flex flex-column';
+        content.addEventListener('click', (e)=>{
+            e.stopPropagation();
+        });
+        const titleDiv = document.createElement('div');
+        titleDiv.classList = 'font-header text-center text-white w-100p py-10px mt-10px';
+        titleDiv.innerText = title;
+        const itemsDiv = document.createElement('div');
+        itemsDiv.classList = 'd-flex overflow-x-auto m-20px pb-20px';
+        console.log(options);
+        for(let i=0;i<options.length;i+=5){
+            const columnHolder = document.createElement('div');
+            columnHolder.classList = 'd-flex flex-column align-items-center';
+            for(let j=i;j<i+5;j++){
+                if(options[j]){
+                    const itemButton = document.createElement('button');
+                    itemButton.classList = 'btn cursor-pointer border-radius-5px bg-dark text-white box-shadow-inset font-normal border-0 p-10px m-5px w-200px position-relative white-space-nowrap overflow-hidden text-overflow-ellipsis';
+                    itemButton.innerText = options[j];
+                    itemButton.setAttribute('data-status', options[j]);
+                    itemButton.onclick = callback;
+                    columnHolder.append(itemButton);
+                }
+            }
+            itemsDiv.append(columnHolder);
+        }
+        content.append(titleDiv, itemsDiv);
+        return content;
+    },
+    warning: ({title, message})=>{
+        const content = document.createElement('div');
+        content.classList = 'h-300px w-500px d-flex flex-column justify-content-evenly align-items-center bg-dark box-shadow-dark border-radius-10px px-20px';
+        content.addEventListener('click', (e)=>{
+            e.stopPropagation();
+        });
+        const warningTitle = document.createElement('div');
+        warningTitle.innerText = title;
+        warningTitle.classList = 'text-center font-header';
+        const warningMessage = document.createElement('div');
+        warningMessage.innerText = message;
+        warningMessage.classList = 'text-center font-normal';
+        const warningButton = document.createElement('div');
+        warningButton.classList = 'text-center font-normal cursor-pointer align-self-center bg-primary border-radius-5px p-15px';
+        warningButton.innerText = 'Choose another account';
+        warningButton.addEventListener('click', async()=>{
+            window.history.pushState({}, '', `/`);
+            await view();
+        });
+        content.append(warningTitle, warningMessage, warningButton);
+        return content;
+    },
+    confirmation: ({title, message, callback})=>{
+        const content = document.createElement('div');
+        content.classList = 'h-300px w-500px d-flex flex-column justify-content-evenly align-items-center bg-dark box-shadow-dark border-radius-10px px-20px';
+        content.addEventListener('click', (e)=>{
+            e.stopPropagation();
+        });
+        const warningTitle = document.createElement('div');
+        warningTitle.innerText = title;
+        warningTitle.classList = 'text-center font-header';
+        const warningMessage = document.createElement('div');
+        warningMessage.innerText = message;
+        warningMessage.classList = 'text-center font-normal';
+        const warningButton = document.createElement('div');
+        warningButton.classList = 'text-center font-normal cursor-pointer align-self-center bg-primary border-radius-5px p-15px';
+        warningButton.innerText = 'Yes';
+        warningButton.addEventListener('click', async()=>{
+            await callback();
+        });
+        content.append(warningTitle, warningMessage, warningButton);
+        return content;
+    },
+};
+const dataLoads = {
+    facebookAccounts: async ()=>{
+        const accountsJson = await fetch('/api/facebookAccounts',{
+            method: 'post',
+            headers:{
+                'Content-Type': 'application/json',
+            }
+        });
+        const accounts = await accountsJson.json();
+        return accounts;
+    },
+    facebookAccountsWithDetails: async ()=>{
+        const accountsJson = await fetch('/api/facebookAccountsWithDetails',{
+            method: 'post',
+            headers:{
+                'Content-Type': 'application/json',
+            }
+        });
+        const accounts = await accountsJson.json();
+        return accounts;
+    },
+    facebookAccountItemCount: async ()=>{
+        const url = new URL(window.location.href);
+        const path = url.pathname;
+        const fb_id = path.split('/')[2];
+        const ItemCountJSON = await fetch('/api/facebookAccountItemCount',{
+            method: 'post',
+            headers:{
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({fb_id})
+        });
+        const ItemCount = await ItemCountJSON.json();
+        // console.log(ItemCount);
+        return ItemCount.count;
+    },
+    accountMessages: async ()=>{
+        const url = new URL(window.location.href);
+        const path = url.pathname;
+        const fb_id = path.split('/')[2];
+        const itemsJson = await fetch('/api/accountMessages',{
+            method: 'post',
+            headers:{
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({fb_id})
+        });
+        const {items,fb_user_name} = await itemsJson.json();
+        if(!fb_user_name){
+            return null;
+        }else{
+            const item_ids = items.map(item=>item.item_id);
+            const itemObj = {};
+            for(let i=0;i<items.length;i++){
+                itemObj[items[i].item_id] = items[i].has_unread_message;
+            }
+            // console.log(itemObj);
+            const query = `
+                query {
+                    boards(ids:[${globals.mondayFetch.borEffortBoardId}]){
+                        items(ids:[${item_ids}],exclude_nonactive:true,limit:1000){
+                            name,
+                            id,
+                            column_values(ids:["${globals.mondayFetch.columnValuesIds.borEffortBoard.status}"]){
+                                text
+                            }
+                        }
+                    }
+                }
+            `;
+            const mondayItemsDataJson = await functions.mondayFetch(query);
+            const mondayItemsdata = await mondayItemsDataJson.json();
+            const mondayItems = mondayItemsdata.data.boards[0].items;
+            const finalItems= [];
+            for(let i=0;i<mondayItems.length;i++){
+                const item = {};
+                item.item_id = mondayItems[i].id;
+                item.fb_seller_name = mondayItems[i].name;
+                item.status = mondayItems[i].column_values[0].text;
+                item.has_unread_message = itemObj[mondayItems[i].id];
+                finalItems.push(item);
+            }
+            if(finalItems.length>0){
+                return {items: finalItems, fb_user_name};
+            }else{
+                return null;
+            }
+        }
         
+    },
+    singleItemMessage: async ({force=false})=>{
+        const url = new URL(window.location.href);
+        const path = url.pathname;
+        const fb_id = path.split('/')[2];
+        const item_id = url.searchParams.get('item_id');
+        // get userName from localStorage
+        const userName = localStorage.getItem('userName');
+        const allMessageSection = document.getElementById('allMessageSection');
+        const itemInAllMessageSection = allMessageSection.querySelector(`[data-item_id="${item_id}"]`);
+        if(!item_id || !itemInAllMessageSection){
+            return null;
+        }else{
+            const messagesDataJson = await fetch('/api/singleItemMessage',{
+                method: 'post',
+                headers:{
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({item_id,force,userName})
+            });
+            const singleItemData = await messagesDataJson.json();
+            return singleItemData;
+        }
+    },
+    messageScript: async ()=>{
+        const url = new URL(window.location.href);
+        const item_id = url.searchParams.get('item_id');
+        if(!item_id){
+            return null;
+        }else{
+            const scriptJson = await fetch('/api/messageScript',{
+                method: 'post',
+                headers:{
+                    'Content-Type': 'application/json',
+                }
+            });
+            const script = await scriptJson.json();
+            return script;
+        } 
+    },
+    mondayItem: async ()=>{
+        const url = new URL(window.location.href);
+        const item_id = url.searchParams.get('item_id');
+        const allColumnIds = Object.keys(globals.mondayFetch.allColumnIds.borEffortBoard);
+        if(!item_id){
+            return null;
+        }else{
+            const query = `
+                query{
+                    boards(ids:[${globals.mondayFetch.borEffortBoardId}]){
+                        items(ids:[${item_id}],exclude_nonactive:true){
+                            name,
+                            id,
+                            column_values(ids:[${allColumnIds.map(id=>`"${id}"`)}]){
+                                text,
+                                id,
+                            },
+                            updates{
+                                text_body,
+                                assets {
+                                    public_url
+                                }
+                                creator{
+                                    name,
+                                    email,
+                                    photo_small
+                                }
+                            }
+                        }
+                    }
+                }
+            `;
+            const mondayItemsDataJson = await functions.mondayFetch(query);
+            const mondayItemsdata = await mondayItemsDataJson.json();
+            if(mondayItemsdata.data!=null){
+                if(mondayItemsdata.data.boards[0].items.length>0){
+                    return mondayItemsdata.data.boards[0].items[0];
+                }else{
+                    return null;
+                }
+            }else{
+                return null;
+            }
+        }
+        
+    },
+    updateBorEffortSimpleColumnValue: async ({item_id,column_id,value})=>{
+        const query = `
+            mutation{
+                change_simple_column_value(board_id:${globals.mondayFetch.borEffortBoardId} ,item_id:${item_id},column_id:"${column_id}",value:"${value}"){
+                    id
+                }
+            }
+        `;
+        const mondayItemsDataJson = await functions.mondayFetch(query);
+        const mondayItemsdata = await mondayItemsDataJson.json();
+        return mondayItemsdata;
     }
 };
-const controlView = async ()=>{
-
-};
-const views = {
-    loadItems: async()=>{
+const controllers = {
+    ground: ()=>{
+        const main = document.createElement('div');
+        main.id = 'main';
+        const popup = document.createElement('div');
+        popup.id = 'popup';
+        const notify = document.createElement('div');
+        notify.id = 'notify';
+        notify.classList = 'position-fixed right-30px top-30px zindex-8 overflow-y-auto w-200px h-100vh pointer-events-none';
+        document.body.replaceChildren(main, popup,notify);
+    },
+    secondaryGround : ()=>{
         const main = document.getElementById('main');
-        main.classList = 'h-100p w-100p d-flex flex-column justify-content-center align-items-center bg-dark';
+        main.classList = 'h-100vh w-100p d-flex';
+        const allMessageSection = document.createElement('div');
+        allMessageSection.id = 'allMessageSection';
+        allMessageSection.classList = 'minw-200px maxw-250px w-100p h-100vh d-flex flex-column p-0 m-0 box-shadow-inset-right overflow-y-auto';
+
+        const singleMessageSection = document.createElement('div');
+        singleMessageSection.id = 'singleMessageSection';
+        singleMessageSection.classList = 'minw-400px maxw-600px w-100p h-100vh box-shadow-inset-right d-flex flex-column align-items-center justify-content-center text-white';
+
+        const messageScriptSection = document.createElement('div');
+        messageScriptSection.id = 'messageScriptSection';
+        messageScriptSection.classList = 'minw-200px w-100p h-100vh box-shadow-inset-right overflow-y-auto';
+        
+
+        const mondayItemSection = document.createElement('div');
+        mondayItemSection.id = 'mondayItemSection';
+        mondayItemSection.classList = 'minw-400px maxw-400px w-100p h-100vh overflow-y-auto box-shadow-inset';
+
+        main.replaceChildren(allMessageSection, singleMessageSection, messageScriptSection, mondayItemSection);
+        
+    },
+    allMessage: (messageData)=>{
+        const allMessageSection = document.getElementById('allMessageSection');
+        if(!messageData){
+            allMessageSection.classList.add('justify-content-center');
+            allMessageSection.classList.add('align-items-center'); 
+            allMessageSection.classList.add('text-white');
+            const noMessage = document.createElement('div');
+            noMessage.classList = 'text-center';
+            noMessage.innerHTML = 'No item message on Bor Effort';
+            const selectOtherAccount = document.createElement('button');
+            selectOtherAccount.classList = 'btn cursor-pointer border-radius-5px text-white bg-primary font-normal border-0 p-10px my-5px position-relative white-space-nowrap overflow-hidden text-overflow-ellipsis';
+            selectOtherAccount.innerHTML = 'Select another account';
+            selectOtherAccount.addEventListener('click', async()=>{
+                controllers.popup({
+                    state:true,
+                    content: popups.loader(),
+                    options: {
+                        removeButton: false,
+                        backDrop: false,
+                    }
+                })
+                const accountData = await dataLoads.facebookAccountsWithDetails();
+                const accountMultipleChoiceContent = popups.multipleChoice({
+                    title: 'Select accounts to work with',
+                    items: accountData, 
+                    callback: callbacks.selectAccountMultipleChoice
+                });
+                controllers.popup({
+                    state: true,
+                    content: accountMultipleChoiceContent,
+                    options:{
+                        backdrop:true,
+                        removeButton: true
+                    }
+                });
+            });
+            allMessageSection.replaceChildren(noMessage, selectOtherAccount);
+        }else{
+            const header = document.createElement('div');
+            header.classList = 'p-10px position-sticky top-0 bg-dark box-shadow-inset-bottom d-flex justify-content-between align-items-center';
+            const headerSelect = document.createElement('button');
+            headerSelect.classList = 'btn cursor-pointer border-radius-5px w-100p text-white bg-primary font-normal border-0 p-10px my-5px position-relative white-space-nowrap overflow-hidden text-overflow-ellipsis';
+            headerSelect.innerText = messageData.fb_user_name;
+            headerSelect.addEventListener('click', async()=>{
+                controllers.popup({
+                    state:true,
+                    content: popups.loader(),
+                    options: {
+                        removeButton: false,
+                        backDrop: false,
+                    }
+                })
+                const accountData = await dataLoads.facebookAccountsWithDetails();
+                const accountMultipleChoiceContent = popups.multipleChoice({
+                    title: 'Select accounts to work with',
+                    items: accountData, 
+                    callback: callbacks.selectAccountMultipleChoice
+                });
+                controllers.popup({
+                    state: true,
+                    content: accountMultipleChoiceContent,
+                    options:{
+                        backdrop:true,
+                        removeButton: true
+                    }
+                });
+            });
+            const headerReload = document.createElement('button');
+            headerReload.classList = 'btn border-round text-white box-shadow-inset bg-dark border-0 ml-5px w-30px h-30px font-header';
+            headerReload.innerHTML = '&#8634;';
+            headerReload.addEventListener('click', async()=>{
+                controllers.popup({
+                    state:true,
+                    content: popups.loader(),
+                    options: {
+                        removeButton: false,
+                        backDrop: false,
+                    }
+                })
+                await view();
+                controllers.popup({state: false,});
+            });
+            header.replaceChildren(headerSelect, headerReload);
+
+            const body = document.createElement('div');
+            body.classList = 'h-100p overflow-y-scroll box-shadow-inset-top';
+            const items = messageData.items;
+            // uniques statues
+            const statuses = [...new Set(items.map(item=>item.status))];
+            // divide by statuses 
+            const dividedItems = {};   
+            for(const item of items){
+                dividedItems[item.status] = dividedItems[item.status] || [];
+                dividedItems[item.status].push(item);
+            }
+            for(const status of statuses){
+                const title = document.createElement('div');
+                title.classList = 'py-5px px-10px text-white font-sub box-shadow-inset bg-secondary';
+                title.innerText = status;
+                const statusItems = dividedItems[status];
+                const statusItemsContainer = document.createElement('div');
+                statusItemsContainer.classList = 'p-10px';
+                statusItemsContainer.setAttribute('data-status', status);
+                for(const item of statusItems){
+                    // console.log(item);
+                    const itemBox = document.createElement('div');
+                    itemBox.classList = 'py-20px cursor-pointer font-normal my-10px px-5px box-shadow-inset';
+                    if(item.item_id==new URL(window.location.href).searchParams.get('item_id')){
+                        itemBox.setAttribute('data-selected', 'yes');
+                    }
+                    itemBox.setAttribute('data-item_id', item.item_id);
+                    itemBox.setAttribute('data-fb_seller_name', item.fb_seller_name);
+
+                    itemBox.innerText = item.fb_seller_name;
+                    itemBox.addEventListener('click', async()=>{
+                        window.history.pushState({},"", `?item_id=${item.item_id}`);
+                        controllers.popup({
+                            state:true,
+                            content: popups.loader(),
+                            options: {
+                                removeButton: true,
+                                backDrop: false,
+                            }
+                        })
+                        const singleItem = await dataLoads.singleItemMessage({force:false});
+                        const messageScript = await dataLoads.messageScript();
+                        const mondayItem = await dataLoads.mondayItem();
+                        controllers.singleItemMessage(singleItem);
+                        controllers.messageScript(messageScript);
+                        controllers.mondayItem(mondayItem);
+                    });
+                    statusItemsContainer.append(itemBox);
+                }
+                body.append(title, statusItemsContainer);
+            }
+            allMessageSection.replaceChildren(header, body);
+        }
+    },
+    singleItemMessage: (itemData)=>{
+        console.log(itemData);
+        const singleMessageSection = document.getElementById('singleMessageSection');
+        if(!itemData){
+            singleMessageSection.classList = 'minw-400px maxw-600px w-100p h-100vh box-shadow-inset-right d-flex flex-column align-items-center justify-content-center text-white';
+            singleMessageSection.innerText = 'Please Choose a valid Item';
+            controllers.popup({state: false});
+        }else{
+            const has_last_owner = itemData.has_last_owner;
+            if(has_last_owner){
+                const confirmationPopup = popups.confirmation({
+                    title:'Someone is already using this Chat!',
+                    message:'Do you want to take over this chat?',
+                    callback:async ()=>{
+                        controllers.popup({
+                            state:true,
+                            content: popups.loader(),
+                            options: {
+                                removeButton: false,
+                                backDrop: false,
+                            }
+                        });
+                        const itemData = await dataLoads.singleItemMessage({force:true})
+                        controllers.singleItemMessage(itemData);
+                    }
+                });
+                controllers.popup({
+                    state:true,
+                    content: confirmationPopup,
+                    options: {
+                        removeButton: true,
+                        backDrop: false,
+                    }
+                });
+            }else{
+                singleMessageSection.classList = 'minw-400px maxw-600px w-100p h-100vh box-shadow-inset d-flex d-flex flex-column';
+
+                const header = document.createElement('div');
+                header.classList = 'p-10px position-sticky top-0 bg-dark box-shadow-inset-bottom d-flex justify-content-between align-items-center mx-5px';
+                const title = document.createElement('div');
+                title.classList = 'text-white font-header p-10px text-center w-100p';
+                const fb_seller_name = document.querySelector(`[data-item_id="${itemData.item_id}"][data-fb_seller_name]`).getAttribute('data-fb_seller_name');
+                title.innerText = fb_seller_name;
+                header.append(title);
+                const chat = document.createElement('div');
+                chat.classList = 'h-100p overflow-y-auto box-shadow-inset-top';
+                const messages = itemData.messages;
+                for(const message of messages){
+                    const messageBox = document.createElement('div');
+                    messageBox.classList = 'p-10px d-flex';
+                    if(message.sent_from=='seller'){
+                        messageBox.classList.add('justify-content-start');
+                    }else{
+                        messageBox.classList.add('justify-content-end');
+                    }
+                    const messageContent = document.createElement('div');
+                    messageContent.classList = 'p-10px bg-grey font-sub w-80p border-radius-5px box-shadow-inset';
+                    if(message.type=='text'){
+                        messageContent.innerText = message.message;
+                    }else if(message.type=='image'){
+                        const image = document.createElement('img');
+                        image.classList = 'w-100p';
+                        image.src = message.message;
+                        messageContent.append(image);
+                    }
+                    messageBox.append(messageContent);
+                    chat.append(messageBox);
+                }
+                
+                const footer = document.createElement('div');
+                footer.classList = 'bg-dark box-shadow-inset p-0 m-0 position-relative';
+                const textarea = document.createElement('textarea');
+                textarea.setAttribute('data-gramm', 'false');
+                textarea.id = 'messagInputArea';
+                textarea.classList = 'w-100p-n10px h-100px border-0 bg-grey text-white font-sub box-shadow-inset resize-none p-5px m-0';
+                const sendButton = document.createElement('button');
+                sendButton.classList = 'btn border-round text-white box-shadow-inset bg-dark border-0 w-50px h-50px font-normal position-absolute top-0 right-0 opacity-50';
+                const sendIcon = document.createElement('span');
+                sendIcon.classList = 'fs-40px line-height-50';
+                sendIcon.innerHTML = '&#x203A;';
+                sendButton.append(sendIcon);
+                sendButton.addEventListener('click', async()=>{
+                    const message = textarea.value;
+                    if(message){
+                        controllers.popup({state:true, content: popups.loader(), options: {removeButton: false, backDrop: false}});
+                        const userName = window.localStorage.getItem('userName');
+                        const messageData = await dataLoads.sendMessage({message,userName});
+                        controllers.singleItemMessage(messageData);
+                        textarea.value = '';
+                        controllers.popup({state:false});
+                    }
+                });
+                footer.append(textarea,sendButton);
+
+
+                singleMessageSection.replaceChildren(header, chat,footer);
+                const selected = document.querySelector(`[data-item_id][data-fb_seller_name][data-selected="yes"]`);
+                if(selected){
+                    selected.removeAttribute('data-selected');
+                }
+                document.querySelector(`[data-item_id="${itemData.item_id}"][data-fb_seller_name]`).setAttribute('data-selected', 'yes');
+                controllers.popup({state: false});
+            }
+        }
+        
+
+    },
+    messageScript: (scripts)=>{
+        const messageScriptSection = document.getElementById('messageScriptSection');
+        if(!scripts){
+            const noScript = document.createElement('div');
+            noScript.classList = 'w-100p h-100p d-flex flex-column align-items-center justify-content-center text-white';
+            noScript.innerText = 'No script found';
+            messageScriptSection.replaceChildren(noScript);
+        }else{
+            const header = document.createElement('div');
+            header.classList = 'p-10px position-sticky top-0 bg-dark box-shadow-inset-bottom d-flex justify-content-between align-items-center mx-5px';
+            const title = document.createElement('div');
+            title.classList = 'text-white font-header p-10px text-center w-100p';
+            title.innerText = 'Message Scripts';
+            header.append(title);
+            messageScriptSection.append(header);
+            for(const script of scripts){
+                const scriptBox = document.createElement('div');
+                const scriptTitle = document.createElement('div');
+                const scriptContent = document.createElement('div');
+    
+                scriptBox.classList = 'p-10px bg-dark border-radius-5px my-10px';
+                scriptTitle.classList = 'text-white font-sub box-shadow-inset p-5px w-50p white-space-nowrap overflow-hidden text-overflow-ellipsis';
+                scriptContent.classList = 'text-white font-sub box-shadow-inset p-10px  cursor-pointer';
+                scriptContent.addEventListener('click', (e)=>{
+                    const message = e.target.innerText;
+                    const textarea = document.querySelector('#messagInputArea');
+                    textarea.value = message;
+                    textarea.focus();
+                });
+                scriptTitle.innerText = script.code;
+                
+                
+                scriptContent.innerText = script.content;
+                scriptBox.append(scriptTitle, scriptContent);
+                messageScriptSection.append(scriptBox);
+            }
+        }
+        
+    },
+    mondayItem: (itemData)=>{
+        const mondayItemSection = document.getElementById('mondayItemSection');
+        if(!itemData){
+            const noItem = document.createElement('div');
+            noItem.classList = 'w-100p h-100p d-flex flex-column align-items-center justify-content-center text-white';
+            noItem.innerText = 'Not a valid item';
+            mondayItemSection.replaceChildren(noItem);
+        }else{
+            console.log(itemData);
+            const header = document.createElement('div');
+            header.classList = 'position-sticky top-0 bg-dark box-shadow-inset-bottom d-flex justify-content-between align-items-center';
+            const content = document.createElement('div');
+            mondayItemSection.replaceChildren(header,content);
+            const columnsButton = document.createElement('div');
+            columnsButton.classList = 'btn w-50p font-header text-white p-20px text-center cursor-pointer';
+            columnsButton.setAttribute('data-selected', 'yes');
+            columnsButton.innerText = 'Columns';
+            columnsButton.addEventListener('click', ()=>{
+                columnsButton.setAttribute('data-selected', 'yes');
+                updatesButton.removeAttribute('data-selected');
+                buildColumns();
+            });
+            const updatesButton = document.createElement('div');
+            updatesButton.classList = 'btn w-50p font-header text-white p-20px text-center cursor-pointer';
+            updatesButton.innerText = 'Updates';
+            updatesButton.addEventListener('click', ()=>{
+                columnsButton.removeAttribute('data-selected');
+                updatesButton.setAttribute('data-selected', 'yes');
+                buildUpdates();
+            });
+
+            const buildColumns = ()=>{
+                content.replaceChildren();
+                for(const column of itemData.column_values){
+                    const storedValue = globals.mondayFetch.allColumnIds.borEffortBoard[column.id];
+                    const storedStatuses = globals.mondayFetch.allStatuses.borEffortBoard;
+                    const columnBox = document.createElement('div');
+                    const columnTitle = document.createElement('div');
+                    columnBox.classList = 'p-10px bg-dark mx-5px d-flex justify-content-between align-items-center';
+                    columnTitle.classList = 'text-white font-sub p-5px w-150px h-30px white-space-nowrap overflow-hidden text-overflow-ellipsis';
+                    columnTitle.innerText = storedValue.title;
+                    columnBox.append(columnTitle);
+                    
+                    if(storedValue.editable){
+                        const updateValue = async(e)=>{
+                            const input = e.target;
+                            const item_id = itemData.id;
+                            const column_id = column.id;
+                            const value = input.value;
+                            console.log('was going to update the value');
+                            console.log(`item_id: ${item_id}, column_id: ${column_id}, value: ${value}`);
+                            // const updateData = await dataLoads.updateBorEffortSimpleColumnValue({item_id, column_id, value});
+                            // controllers.notify({message: updateData.message, type: updateData.type});
+                        };
+                        if(storedValue.type == 'status'){
+                            // status with multipleChoice
+                            const hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.value = column.text;
+                            hiddenInput.onchange = updateValue;
+                            const statusBox = document.createElement('button');
+                            statusBox.classList = 'btn cursor-pointer border-radius-5px w-200px h-40px text-white bg-primary font-normal border-0 p-5px my-5px white-space-nowrap overflow-hidden text-overflow-ellipsis';
+                            statusBox.innerText = column.text;
+                            statusBox.addEventListener('click', ()=>{
+                                const choiceContent = popups.chooseStatus({
+                                    title: 'Select Status',
+                                    options: storedStatuses,
+                                    callback: async (e)=>{
+                                        const status = e.target.getAttribute('data-status');
+                                        if(status!=hiddenInput.value){
+                                            hiddenInput.value = status;
+                                            hiddenInput.dispatchEvent(new Event('change'));
+                                            statusBox.innerText = status;
+                                        }
+                                        controllers.popup({state:false});
+                                    },
+                                });
+                                controllers.popup({
+                                    state: true,
+                                    content: choiceContent,
+                                    options: {
+                                        backDrop: true,
+                                        removeButton: true,
+                                    }
+                                })
+                            });
+                            columnBox.append(hiddenInput,statusBox);
+                        }else{
+                            // text with input
+                            const input = document.createElement('input');
+                            input.classList = 'text-white bg-dark font-sub p-5px w-200px h-30px white-space-nowrap overflow-hidden text-overflow-ellipsis border-0 box-shadow-inset';
+                            input.type = 'text';
+                            input.value = column.text;
+                            input.onchange = updateValue;
+                            columnBox.append(input);
+                        }
+                    }else{
+                        const columnValue = document.createElement('div');
+                        columnValue.classList = 'text-white text-center font-sub w-200px p-5px h-30px white-space-nowrap overflow-hidden text-overflow-ellipsis align-items-center box-shadow-inset line-height-30px border-radius-5px';
+                        if(storedValue.type === 'url'){
+                            const link = document.createElement('a');
+                            link.classList = 'text-white';
+                            link.href = column.text;
+                            link.target = '_blank';
+                            link.innerText = column.text;
+                            columnValue.append(link);
+                        }else{
+                            columnValue.innerText = column.text;
+                        }
+                        columnBox.append(columnValue);
+                    }
+
+                    content.append(columnBox);
+                }
+            };
+            const buildUpdates = ()=>{
+
+            };
+            header.append(columnsButton, updatesButton);
+            buildColumns();
+        }
+    },
+    popup: ({state,content,options={backDrop:true,removeButton:true}})=>{
+        const popup = document.getElementById('popup');
+        const removePopup = ()=>{
+            popup.classList = '';
+            popup.replaceChildren();
+        };
+        removePopup();
+        if(state){
+            popup.classList = 'h-100vh w-100vw d-flex flex-column justify-content-center align-items-center position-fixed top-0 left-0 bg-transparent';
+            const popupContent = document.createElement('div');
+            popupContent.append(content);
+            popupContent.classList = 'position-relative';
+            popup.append(popupContent);
+            if(options.removeButton){
+                const crossButtonHolder = document.createElement('div');
+                crossButtonHolder.classList = 'position-absolute top-0 right-0';
+                crossButtonHolder.append(components.crossButton({size:20}));
+                crossButtonHolder.addEventListener('click', ()=>{
+                    removePopup();
+                });
+                popupContent.append(crossButtonHolder);
+            }
+            if(options.backDrop){
+                popup.addEventListener('click', ()=>{
+                    removePopup();
+                });
+            }
+        }
+    },
+    notify: async ({data,type})=>{
+        const notify = document.getElementById('notify');
+        const newNotification = document.createElement('div');
+        newNotification.classList = 'cursor-pointer my-10px';
+        const notification = document.createElement('div');
+        notification.classList = 'text-white p-10px border-radius-5px';
+        notification.classList.add(`bg-${type}`);
+        notification.innerText = data;
+        newNotification.append(notification);
+        notify.appendChild(newNotification);
+        newNotification.onclick = ()=>{
+            newNotification.remove();
+        }
+        await sleep(3000);
+        newNotification.remove();
+    },
+     
+};
+const components = {
+    crossButton: ({size=30})=>{
+        const designCross = document.createElement('div');
+        const crossButton = document.createElement('div');
+        const designCrossFirst = document.createElement('div');
+        const designCrossSecond = document.createElement('div');
+        designCrossFirst.classList = 'first';
+        designCrossSecond.classList = 'second';
+        designCross.append(designCrossFirst, designCrossSecond);
+        designCross.classList = 'design-cross';
+        designCross.style.height = `${size}px`;
+        designCross.style.width = `${size}px`;
+        designCrossFirst.style.left = `${size/2-(size/100*3)}px`;
+        designCrossSecond.style.left = `${size/2-(size/100*3)}px`;
+        designCrossFirst.style.height = `${size}px`;
+        designCrossSecond.style.height = `${size}px`;
+        designCrossFirst.style.width = `${size/100*6}px`;
+        designCrossSecond.style.width = `${size/100*6}px`;
+        designCrossFirst.style.borderRadius = `${size/100*6}px`;
+        designCrossSecond.style.borderRadius = `${size/100*6}px`;
+        crossButton.classList = 'position-relative d-flex justify-content-center align-items-center cursor-pointer';
+        crossButton.style.height = `${size}px`;
+        crossButton.style.width = `${size}px`;
+        crossButton.append(designCross);
+        return crossButton;
+    },
+    loaderCircle: ({size=30})=>{
+        const loaderCircle = document.createElement('div');
+        loaderCircle.classList = 'loader-circle';
+        loaderCircle.style.height = `${size}px`;
+        loaderCircle.style.width = `${size}px`;
+        loaderCircle.style.borderRadius = `${size}px`;
+        loaderCircle.style.borderTop = `${size/7.5}px solid blue`;
+        loaderCircle.style.borderRight = `${size/7.5}px solid green`;
+        loaderCircle.style.borderBottom = `${size/7.5}px solid red`;
+        loaderCircle.style.borderLeft = `${size/7.5}px solid pink`;
+        return loaderCircle;
+    },
+}
+const pages = {
+    loadRawItem: async()=>{
+        const main = document.getElementById('main');
+        main.classList = 'h-100vh d-flex flex-column justify-content-center align-items-center bg-dark';
         const text = document.createElement('span');
         text.classList = 'text-center font-header';
-        text.innerText = 'Loading items from monday.com';
+        text.innerText = 'Load items from monday.com';
         const groupNameInput = document.createElement('input');
-        groupNameInput.classList = 'w-100p h-40px border-radius-5px bg-dark font-normal focus-outline-none line-white-border px-5px';
+        groupNameInput.classList = 'w-500px h-40px border-radius-5px bg-dark font-normal focus-outline-none line-white-border my-20px';
         groupNameInput.placeholder = 'Group name';
         // const itemCountInput = document.createElement('input');
         // itemCountInput.classList = 'w-100p h-40px border-radius-5px bg-dark font-normal focus-outline-none line-white-border px-5px';
@@ -306,33 +1206,121 @@ const views = {
                 notify({type:'warning', data:'Please, provide group name and items count'});
             }
         });
-        main.append(text, groupNameInput, loadButton);
+        main.replaceChildren(text, groupNameInput, loadButton);
+        controllers.popup({state:false});
+    },
+    notFound: async()=>{
+        const main = document.getElementById('main');
+        main.classList = 'h-100vh w-100p d-flex flex-column justify-content-center align-items-center bg-dark';
+        const text = document.createElement('span');
+        text.classList = 'text-center font-header';
+        text.innerText = 'Sorry! I think you are in the wrong place';
+        // add confused image(/public/confused.png) to page
+        const image = document.createElement('img');
+        image.src = '/public/picture/confused.png';
+        image.classList = 'h-100px w-100px my-20px';
+        // home redirect button
+        const homeButton = document.createElement('button');
+        homeButton.classList = 'btn text-center font-normal cursor-pointer align-self-center bg-secondary border-radius-5px p-15px';
+        homeButton.innerText = 'Home';
+        homeButton.addEventListener('click', async()=>{
+            window.history.pushState({}, null, '/');
+            await view();
+        });
+        main.replaceChildren(text, image, homeButton);
+        controllers.popup({state:false});
+    },
+    home: async()=>{
+        controllers.secondaryGround();
+        const accountData = await dataLoads.facebookAccountsWithDetails();
+        const accountMultipleChoiceContent = popups.multipleChoice({
+            title: 'Select accounts to work with',
+            items: accountData, 
+            callback: callbacks.selectAccountMultipleChoice
+        });
+        controllers.popup({
+            state: true,
+            content: accountMultipleChoiceContent,
+            options:{
+                backdrop:false,
+                removeButton: false
+            }
+        });
+    },
+    account: async()=>{
+        const url = new URL(window.location.href);
+        const path = url.pathname;
+        const fb_id = path.split('/')[2];
+        controllers.secondaryGround();
+        const accountItemCount = await dataLoads.facebookAccountItemCount();
+        if(accountItemCount > 0){
+            const allMessageData = await dataLoads.accountMessages();
+            controllers.allMessage(allMessageData);
+            const item_id = url.searchParams.get('item_id');
+            // if(item_id){
+                const singleMessageData = await dataLoads.singleItemMessage({force:false});
+                controllers.singleItemMessage(singleMessageData);
+                const messageScriptData = await dataLoads.messageScript();
+                controllers.messageScript(messageScriptData);
+                const mondayItemdata = await dataLoads.mondayItem();
+                controllers.mondayItem(mondayItemdata);
+            // }else{
+            //     controllers.popup({state:false});
+            // }
 
-    } 
+            
+            // const mondayItemdata = await dataLoads.mondayItem();
+            // console.log(allMessageData);
+            // console.log(singleMessageData);
+            // console.log(messageScriptData);
+            // console.log(mondayItemdata);
+            // await controllers.
+            
+        }else{
+            controllers.popup({
+                state: true,
+                content: popups.warning({
+                    title: 'No items found',
+                    message: 'This account has no items to work with'
+                }),
+                options:{
+                    backdrop:true,
+                    removeButton: true
+                }
+            });
+        }
+    },
 };
 
 const view = async()=>{
     const url = new URL(window.location.href);
     const path = url.pathname;
-    if(path=='/loadItems'){
-        await views.loadItems();        
+    if(path=='/loadItems' || path=='/loadItems/'){
+        await pages.loadRawItem();        
+    }else if(path=='/' || path=='/account' || path=='/account/'){
+        await pages.home();
+    }else if(path.match(/\/account\/\d+/)){
+        const fb_id = path.split('/')[2];
+        await pages.account();
+    }else{
+        await pages.notFound();
     }
+
 };
 
 (async ()=>{
-    inititalSetup();
-    popupController({state:true, content:popups.loader(), options:{backDrop:false,removeButton:false}});
-    if(await validUser()){
+    controllers.ground();
+    controllers.popup({state:true, content:popups.loader(), options:{backDrop:false,removeButton:false}});
+    if(await complexes.validUser()){
         await view();
-        popupController({state:false});
     }else{
-        popupController({state:true, content:popups.login({state:'new'}), options:{backDrop:false,removeButton:true}});
+        controllers.popup({state:true, content:popups.login({state:'new'}), options:{backDrop:false,removeButton:false}});
+    }
+    window.onpopstate = async()=>{
+        await view();
     }
 })();
-// 
-// const content = document.createElement('div');
-// content.innerText = 'Hello World';
-// popupController({state:true,content:content,options:{removable:true,removeButton:true}});
+
 
 
 

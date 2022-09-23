@@ -200,4 +200,74 @@ router.post('/sendMessagesToServer',async (req, res) => {
     }
     res.json({});
 });
+router.post('/getUnsentMessagePostIds', async (req, res) => {
+    const fb_id = req.fields.fb_id;
+    // const fb_id = '100006781114329';
+    const items = await Message.findAll({
+        where: {
+            fb_id: fb_id,
+            status: 'unsent'
+        },
+        attributes: [
+            [Sequelize.fn('DISTINCT', Sequelize.col('item_id')) ,'item_id']
+        ],
+    });
+    const item_ids = items.map(item => item.item_id);
+    // get post ids from items
+    const post_ids = await Item.findAll({
+        where: {
+            item_id: {
+                [Sequelize.Op.in]: item_ids
+            }
+        },
+        attributes: ['fb_post_id']
+    });
+    const post_ids_array = post_ids.map(post => post.fb_post_id);
+    res.json({post_ids:post_ids_array})
+});
+router.post('/getUnsentMessagesByPostId', async (req, res) => {
+    const fb_post_id = req.fields.fb_post_id;
+    const item = await Item.findOne({
+        where: {
+            fb_post_id: fb_post_id
+        },
+        attributes: ['item_id']
+    });
+    if(item){
+        const messages = await Message.findAll({
+            where: {
+                item_id: item.item_id,
+                status: 'unsent'
+            },
+            attributes: ['id','message'],
+            order: [
+                ['id', 'ASC']
+            ]
+        });
+        res.json({messages:messages});
+    }else{
+        res.json({messages:[]});
+    }
+});
+router.post('/markMessageAsSent', async (req, res) => {
+    const message_id = req.fields.message_id;
+    await Message.update({
+        status: 'done'
+    },{
+        where: {
+            id: message_id
+        }
+    });
+    res.json({});
+});
+router.post('/serverLinkGoneUpdate', async (req, res) => {
+    const item_id = req.fields.item_id;
+    await Item.update({
+        last_auto_step: 'linkGone',
+    },{
+        where: {
+            item_id: item_id
+        }
+    });
+});
 module.exports = router;
