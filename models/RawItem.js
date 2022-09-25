@@ -19,6 +19,8 @@ const RawItem = db.define('RawItem',{
     }
 },{
     timestamps: false,
+    freezeTableName: true,
+    tableName: 'rawitems'
 });
 // RawItem.sync({force: true});
 module.exports = RawItem;

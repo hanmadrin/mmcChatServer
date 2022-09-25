@@ -17,6 +17,8 @@ const Script = db.define('Script',{
     }
 },{
     timestamps: false,
+    freezeTableName: true,
+    tableName: 'scripts'
 });
 // Script.sync({force: true});
 module.exports = Script;

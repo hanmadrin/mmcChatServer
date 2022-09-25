@@ -54,6 +54,8 @@ const Item = db.define('Item',{
     }
 },{
     timestamps: false,
+    freezeTableName: true,
+    tableName: 'items'
 });
 // Item.sync({force: true});
 module.exports = Item;
