@@ -70,6 +70,7 @@ router.post('/facebookAccountItemCount', async (req, res) => {
 // accountMessages
 router.post('/accountMessages', async (req, res) => {
     const fb_id = req.fields.fb_id;
+    const userName = req.fields.userName;
     const fb_user_nameData = await Item.findOne({
         where: {
             fb_id: fb_id
@@ -103,6 +104,7 @@ router.post('/singleItemMessage', async (req, res) => {
     const mainTask = async (currentUser) => {
         const now = new Date().getTime();
         await Item.update({
+            has_unread_message: false,
             last_owner_name: userName,
             last_owner_timestamp: now
         },{
