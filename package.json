@@ -4,7 +4,8 @@
   "description": "A chat app using WebSockets",
   "main": "server.js",
   "scripts": {
-    "test": "nodemon index.js"
+    "test": "nodemon server.js",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
