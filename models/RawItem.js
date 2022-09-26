@@ -1,7 +1,7 @@
 const sequelize = require('sequelize');
 const db = require('../configs/database.js');
 
-const RawItem = db.define('RawItem',{
+const RawItem = db.define('rawitem',{
     id: {
         primaryKey: true,
         type: sequelize.INTEGER(10),
@@ -19,8 +19,8 @@ const RawItem = db.define('RawItem',{
     }
 },{
     timestamps: false,
-    freezeTableName: true,
-    tableName: 'rawitems'
+    // freezeTableName: true,
+    // tableName: 'RawItems'
 });
 // RawItem.sync({force: true});
 module.exports = RawItem;

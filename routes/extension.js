@@ -183,10 +183,21 @@ router.post('/itemIdByPostId', async (req, res) => {
         res.sendStatus(404);
     }
 });
+// need socket
 router.post('/sendMessagesToServer',async (req, res) => {
     const messages = req.fields.messageData;
     for(let i = 0; i < messages.length; i++){
         await Message.create(messages[i]);
+        webSocket.to(`item_id_${messages[i].item_id}`).emit('response',{
+            action: 'sellerSentNewMessage',
+            data: messages[i]
+        });
+        webSocket.to(`fb_id_${messages[i].fb_id}`).emit('response',{
+            action: 'notifySellerNewMessage',
+            data:{
+                item_id: messages[i].item_id,
+            }
+        });
     }
     if(messages.length > 0){
         const item_id = messages[0].item_id;
@@ -256,6 +267,18 @@ router.post('/markMessageAsSent', async (req, res) => {
     },{
         where: {
             id: message_id
+        }
+    });
+    res.json({});
+});
+// markItemMessagesdone
+router.post('/markItemMessagesDone', async (req, res) => {
+    const item_id = req.fields.item_id;
+    await Message.update({
+        status: 'done'
+    },{
+        where: {
+            item_id: item_id
         }
     });
     res.json({});

@@ -1,7 +1,7 @@
 const sequelize = require('sequelize');
 const db = require('../configs/database.js');
 
-const Message = db.define('Message',{
+const Message = db.define('message',{
     id: {
         primaryKey: true,
         type: sequelize.INTEGER(30),
@@ -42,6 +42,8 @@ const Message = db.define('Message',{
     },
 },{
     timestamps: false,
+    // freezeTableName: true,
+    // tableName: 'messages'
 });
 // Message.sync({force: true});
 module.exports = Message;

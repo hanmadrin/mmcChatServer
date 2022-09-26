@@ -90,13 +90,34 @@ router.post('/accountMessages', async (req, res) => {
                 'has_unread_message',
             ]
         });
+        const length = items.length;
+        for(let i = 0; i < length; i++){
+            const message = await Message.findOne({
+                where: {
+                    item_id: items[i].item_id
+                },
+                order: [
+                    ['id', 'DESC']
+                ],
+                attributes: [
+                    'sent_from',
+                ]
+            });
+            // console.log(message?message.sent_from:message);
+            if(message){
+                const sent_from = message.sent_from;
+                items[i].dataValues.last_message = sent_from;
+            }else{
+                items[i].dataValues.last_message = 'undefined';
+            }
+        }
         res.json({items, fb_user_name});
     }else{
         res.json({items:[], fb_user_name:null});
     }
     
 });
-// singleItemMessage
+// singleItemMessage-SOCKET
 router.post('/singleItemMessage', async (req, res) => {
     const force = req.fields.force;
     const userName = req.fields.userName;
@@ -128,6 +149,38 @@ router.post('/singleItemMessage', async (req, res) => {
                 ['id', 'ASC']
             ]
         });
+        const item = await Item.findOne({
+            where: {
+                item_id: item_id
+            },
+            attributes: [
+                'fb_id',
+            ]
+        });
+        if(item){
+            const lastMessage = await Message.findOne({
+                where: {
+                    item_id: item_id
+                },
+                order: [
+                    ['id', 'DESC'],
+                ],
+                attributes: [
+                    'sent_from',
+                ]
+            });
+            let last_message = 'undefined';
+            if(lastMessage){
+                last_message = lastMessage.sent_from;
+            }
+            webSocket.to(`fb_id_${item.fb_id}`).emit('response', {
+                action: 'messageIsSeen',
+                data:{
+                    item_id: item_id,
+                    last_message: last_message
+                }
+            });
+        }
         res.json({messages, has_last_owner: false, current_user: currentUser,item_id});
     };
     if(force){
@@ -155,7 +208,7 @@ router.post('/singleItemMessage', async (req, res) => {
         }
     }
 });
-// messageScript
+// messageScript-SOCKET
 router.post('/messageScript', async (req, res) => {
     const scripts = await Script.findAll({
         attributes: [
@@ -164,6 +217,47 @@ router.post('/messageScript', async (req, res) => {
         ]
     });
     res.json(scripts);
+});
+// sendMessage--SOCKET
+router.post('/sendMessage', async (req, res) => {
+    const item_id = req.fields.item_id;
+    const fb_id = req.fields.fb_id;
+    const message = req.fields.message;
+    const sent_from = "me";
+    const mmc_user = req.fields.userName;
+    const timestamp = new Date().getTime();
+    const status = "unsent";
+    const type = "text";
+    const messageData = {
+        fb_id,
+        item_id,
+        message,
+        sent_from,
+        mmc_user,
+        timestamp,
+        status,
+        type
+    };
+    await Message.create(messageData);
+    webSocket.to(`fb_id_${fb_id}`).emit('response', {
+        action: 'notifyLastMessageFromMe',
+        data:{
+            item_id,
+            fb_id
+        }
+    });
+    webSocket.to(`item_id_${item_id}`).emit('response', {
+        action: 'newMessageFromMe',
+        data:{
+            fb_id,
+            item_id,
+            message,
+            sent_from,
+            mmc_user,
+            type
+        }
+    });
+    res.json({});
 });
 router.get('/socket', (req, res) => {
     webSocket.sockets.emit('chat', {handle: 'yuiyi', message: 'Welcome to the chat app'});

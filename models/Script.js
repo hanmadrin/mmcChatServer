@@ -1,7 +1,7 @@
 const sequelize = require('sequelize');
 const db = require('../configs/database.js');
 
-const Script = db.define('Script',{
+const Script = db.define('script',{
     id: {
         primaryKey: true,
         type: sequelize.INTEGER(10),
@@ -17,8 +17,8 @@ const Script = db.define('Script',{
     }
 },{
     timestamps: false,
-    freezeTableName: true,
-    tableName: 'scripts'
+    // freezeTableName: true,
+    // tableName: 'scripts'
 });
 // Script.sync({force: true});
 module.exports = Script;

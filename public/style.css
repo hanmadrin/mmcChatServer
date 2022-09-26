@@ -557,3 +557,22 @@ body{background-color: var(--dark-bg);padding: 0;margin: 0;}
     background-color: transparent;
     pointer-events: none;
   }
+  [data-sending="yes"]>div{
+    box-shadow: inset 0 0 0 1px red !important;
+  }
+  [data-last_message="new"]{
+    box-shadow: inset 0 0 0 1px red;
+    order: 1;
+  }
+  [data-last_message="seller"]{
+    box-shadow: inset 0 0 0 1px yellow;
+    order: 2;
+  }
+  [data-last_message="me"]{
+    box-shadow: inset 0 0 0 1px green;
+    order: 3;
+  }
+  [data-last_message="undefined"]{
+    box-shadow:inset 0 0 0 1px #30324e;
+    order: 4;
+  }
