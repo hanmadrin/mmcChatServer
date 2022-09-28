@@ -202,7 +202,7 @@ router.post('/sendMessagesToServer',async (req, res) => {
     if(messages.length > 0){
         const item_id = messages[0].item_id;
         await Item.update({
-            has_unread_messages: true
+            has_unread_message: true
         },{
             where: {
                 item_id: item_id
@@ -292,5 +292,6 @@ router.post('/serverLinkGoneUpdate', async (req, res) => {
             item_id: item_id
         }
     });
+    rws.json({});
 });
 module.exports = router;

@@ -67,6 +67,18 @@ const globals = {
         },
         allColumnIds:{
             borEffortBoard:{
+                // person
+                "person": {
+                    title: "Person",
+                    type: "text",
+                    editable: false,
+                },
+                // FB CODE
+                "text84": {
+                    title: "FB CODE",
+                    type: "text",
+                    editable: false,
+                },
                 // URL
                 "text7": {
                     title: "URL",
@@ -79,6 +91,12 @@ const globals = {
                     type: "status",
                     editable: true
                 },
+                // Date
+                "date4": {
+                    title: "Date",
+                    type: "text",
+                    editable: false
+                },
                 // Vin#
                 "text6":{
                     title: "Vin#",
@@ -90,7 +108,7 @@ const globals = {
                     title: "MMC Offer$",
                     type: "number",
                     editable: false
-                },
+                },               
                 // Seller Counter$
                 "numbers7":{
                     title: "Seller Counter$",
@@ -1465,7 +1483,7 @@ const pages = {
                                 }
                             }
                         `;
-                        const mondayResponse = await mondayFetch(query);
+                        const mondayResponse = await functions.mondayFetch(query);
                         const mondayResponseJson = await mondayResponse.json();
                         const items = mondayResponseJson.data.boards[0].groups[0].items;
                         // where column values is "verified"
@@ -1481,23 +1499,23 @@ const pages = {
                                 body: JSON.stringify({items:verifiedItemIds})
                             });
                             if(uploadItems.status === 200){
-                                notify({type:'success', data:'Items uploaded successfully'});
+                                controllers.notify({type:'success', data:'Items uploaded successfully'});
                             }else{
-                                notify({type:'danger', data:'Items upload failed'});
+                                controllers.notify({type:'danger', data:'Items upload failed'});
                             }
                         }else{
-                            notify({type:'warning', data:'No items found with status "verified"'});
+                            controllers.notify({type:'warning', data:'No items found with status "verified"'});
                         }
                     }else{
-                        notify({type:'warning', data:'Group not found!'});
+                        controllers.notify({type:'warning', data:'Group not found!'});
                     }
                 }catch(e){
-                    notify({type:'danger', data:'Error while loading items'});
+                    controllers.notify({type:'danger', data:'Error while loading items'});
                     console.log(e);
                 }
 
             }else{
-                notify({type:'warning', data:'Please, provide group name and items count'});
+                controllers.notify({type:'warning', data:'Please, provide group name and items count'});
             }
         });
         main.replaceChildren(text, groupNameInput, loadButton);
