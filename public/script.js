@@ -67,18 +67,6 @@ const globals = {
         },
         allColumnIds:{
             borEffortBoard:{
-                // person
-                "person": {
-                    title: "Person",
-                    type: "text",
-                    editable: false,
-                },
-                // FB CODE
-                "text84": {
-                    title: "FB CODE",
-                    type: "text",
-                    editable: false,
-                },
                 // URL
                 "text7": {
                     title: "URL",
@@ -107,23 +95,53 @@ const globals = {
                 "numbers9":{
                     title: "MMC Offer$",
                     type: "number",
-                    editable: false
-                },               
+                    editable: true
+                },              
                 // Seller Counter$
                 "numbers7":{
                     title: "Seller Counter$",
                     type: "number",
                     editable: true
                 },
-                // Apart From Counter
-                "formula":{
-                    title: "Apart From Counter",
-                    type: "number",
-                    editable: false
-                },
                 // Price$
                 "numbers4":{
                     title: "Price$",
+                    type: "number",
+                    editable: false
+                },
+                // Year
+                "text":{
+                    title: "Year",
+                    type: "text",
+                    editable: false
+                },
+                // Vehicle
+                "text_1":{
+                    title: "Vehicle",
+                    type: "text",
+                    editable: false
+                },
+                // Mileage
+                "text_2":{
+                    title: "Mileage",
+                    type: "text",
+                    editable: false
+                },
+                // person
+                "person": {
+                    title: "Person",
+                    type: "text",
+                    editable: false,
+                },
+                // FB CODE
+                "text84": {
+                    title: "FB CODE",
+                    type: "text",
+                    editable: false,
+                }, 
+                // Apart From Counter
+                "formula":{
+                    title: "Apart From Counter",
                     type: "number",
                     editable: false
                 },
@@ -161,24 +179,6 @@ const globals = {
                 "numbers_2":{
                     title: "Ave $ MMR",
                     type: "number",
-                    editable: false
-                },
-                // Year
-                "text":{
-                    title: "Year",
-                    type: "text",
-                    editable: false
-                },
-                // Vehicle
-                "text_1":{
-                    title: "Vehicle",
-                    type: "text",
-                    editable: false
-                },
-                // Mileage
-                "text_2":{
-                    title: "Mileage",
-                    type: "text",
                     editable: false
                 },
                 // State
@@ -1099,8 +1099,11 @@ const controllers = {
                 updatesButton.removeAttribute('data-selected');
                 columnsButton.setAttribute('data-selected', 'yes');
                 content.replaceChildren();
-                for(const column of itemData.column_values){
-                    const storedValue = globals.mondayFetch.allColumnIds.borEffortBoard[column.id];
+                const columnIds = Object.keys(globals.mondayFetch.allColumnIds.borEffortBoard);
+                for(const columnId of columnIds){
+                // for(const column of itemData.column_values){
+                    const column = itemData.column_values.find(column=>column.id==columnId);
+                    const storedValue = globals.mondayFetch.allColumnIds.borEffortBoard[columnId];
                     const storedStatuses = globals.mondayFetch.allStatuses.borEffortBoard;
                     const columnBox = document.createElement('div');
                     const columnTitle = document.createElement('div');
@@ -1162,10 +1165,21 @@ const controllers = {
                             // text with input
                             const input = document.createElement('input');
                             input.classList = 'text-white bg-dark font-sub p-5px w-200px h-30px white-space-nowrap overflow-hidden text-overflow-ellipsis border-0 box-shadow-inset';
-                            input.type = 'text';
                             input.value = column.text;
                             input.onchange = updateValue;
+                            input.type = 'text';
                             columnBox.append(input);
+                            if(storedValue.type == 'number'){
+                                const changeToInetger = (e)=>{
+                                    const target = e.target;
+                                    // get digits as string
+                                    const digits = target.value.replace(/[^0-9.]/g, '');
+                                    target.value = digits;
+                                };
+                                input.onkeydown = changeToInetger;
+                                input.onkeyup = changeToInetger;
+                                input.onpaste = changeToInetger;
+                            }
                         }
                     }else{
                         const columnValue = document.createElement('div');
@@ -1461,7 +1475,7 @@ const pages = {
                     }
                 `;
                 try{
-                    const mondayResponse = await mondayFetch(query);
+                    const mondayResponse = await functions.mondayFetch(query);
                     const mondayResponseJson = await mondayResponse.json();
                     const groups = mondayResponseJson.data.boards[0].groups;
                     const group = groups.find(group=>group.title === groupName);
