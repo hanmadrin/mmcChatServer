@@ -1024,6 +1024,9 @@ const controllers = {
             }
             const messageBox = components.singleMessageOne(messageData);
             chat.append(messageBox);
+        }else if(messageData.type=='file'){
+            const messageBox = components.singleMessageOne(messageData);
+            chat.append(messageBox);
         }
     },
     messageScript: (scripts)=>{
@@ -1401,6 +1404,12 @@ const components = {
         messageContent.classList = 'p-10px bg-grey font-sub w-80p border-radius-5px box-shadow-inset position-relative';
         if(message.type=='text'){
             messageContent.innerText = message.message;
+        }else if(message.type=='file'){
+            const file = document.createElement('a');
+            file.href = message.message;
+            file.innerText = "View File";
+            file.target = '_blank';
+            messageContent.append(file);
         }else if(message.type=='image'){
             const url = message.message;
             const image = document.createElement('img');
