@@ -215,6 +215,7 @@ router.post('/getUnsentMessagePostIds', async (req, res) => {
     const fb_id = req.fields.fb_id;
     // const fb_id = '100006781114329';
     const items = await Message.findAll({
+        // limit: 10,
         where: {
             fb_id: fb_id,
             status: 'unsent'
@@ -223,7 +224,9 @@ router.post('/getUnsentMessagePostIds', async (req, res) => {
             [Sequelize.fn('DISTINCT', Sequelize.col('item_id')) ,'item_id']
         ],
     });
-    const item_ids = items.map(item => item.item_id);
+    let item_ids = items.map(item => item.item_id);
+    // get first 10
+    item_ids = item_ids.slice(0, 10);
     // get post ids from items
     const post_ids = await Item.findAll({
         where: {
@@ -285,13 +288,23 @@ router.post('/markItemMessagesDone', async (req, res) => {
 });
 router.post('/serverLinkGoneUpdate', async (req, res) => {
     const item_id = req.fields.item_id;
-    await Item.update({
-        last_auto_step: 'linkGone',
-    },{
+    // await Item.update({
+    //     last_auto_step: 'linkGone',
+    // },{
+    //     where: {
+    //         item_id: item_id
+    //     }
+    // });
+    await Item.destroy({
         where: {
             item_id: item_id
         }
     });
-    rws.json({});
+    await Message.destroy({
+        where: {
+            item_id: item_id
+        }
+    });
+    res.json({});
 });
 module.exports = router;

@@ -531,19 +531,19 @@ body{background-color: var(--dark-bg);padding: 0;margin: 0;}
   
   /* Track */
   ::-webkit-scrollbar-track {
-    box-shadow: inset 0 0 5px rgb(68, 42, 42); 
+    box-shadow: inset 0 0 5px rgba(68, 42, 42, 0.513); 
     border-radius: 10px;
   }
    
   /* Handle */
   ::-webkit-scrollbar-thumb {
-    background: rgb(135, 135, 135); 
+    background: rgba(135, 135, 135, 0.481); 
     border-radius: 10px;
   }
   
   /* Handle on hover */
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--bg-dark); 
+    background: #3335496b; 
   }
 
 

@@ -259,11 +259,39 @@ router.post('/sendMessage', async (req, res) => {
     });
     res.json({});
 });
+// itemsView
+router.post('/viewItemsServerIds', async (req, res) => {
+    let page = req.fields.page;
+    const items = await Item.findAll({
+        limit: 50,
+        pagination: true,
+        offset: (page-1) * 50,
+        attributes: [
+            'item_id',
+        ]
+    });
+
+    res.json(items);
+});
+// deleteItemFromServer
+router.post('/deleteItemFromServer', async (req, res) => {
+    const item_id = req.fields.item_id;
+    await Item.destroy({
+        where: {
+            item_id: item_id
+        }
+    });
+    await Message.destroy({
+        where: {
+            item_id: item_id
+        }
+    });
+    res.json({});
+});
 router.get('/socket', (req, res) => {
     webSocket.sockets.emit('chat', {handle: 'yuiyi', message: 'Welcome to the chat app'});
     res.sendStatus(200);
 });
-
 
 
 module.exports = router;

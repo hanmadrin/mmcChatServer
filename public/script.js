@@ -457,6 +457,57 @@ const popups = {
     },
 };
 const dataLoads = {
+    viewItemsMondayItems: async(ids)=>{
+        const query = `
+            query{
+                items(ids:[${ids.join(',')}],exclude_nonactive:false,limit:1000){
+                    name,
+                    id,
+                    state,
+                    column_values(ids:["status"]){
+                        text
+                    },
+                    board{
+                        name
+                    }
+                }
+            }
+        `;
+        const mondayItemsDataJSON = await functions.mondayFetch(query);
+        const mondayItemsData = await mondayItemsDataJSON.json();
+        const mondayItems = mondayItemsData.data.items;
+        const items = [];
+        for(let i=0;i<mondayItems.length;i++){
+            const mondayItem = mondayItems[i];
+            const item = {
+                id: mondayItem.id,
+                name: mondayItem.name,
+                state: mondayItem.state,
+                status: mondayItem.column_values[0].text,
+                board: mondayItem.board.name,
+            }
+            items.push(item);
+        }
+        return items;
+    },
+    viewItemsServerIds: async()=>{
+        const url = new URL(window.location.href);
+        const page = (url.searchParams.get('page') || 1)<=0?1:(url.searchParams.get('page') || 1);
+        if(url.searchParams.get('page')!=page){
+            url.searchParams.set('page', page);
+            window.history.pushState({}, null, url)
+        }
+        const itemFromServerJSON = await fetch('/api/viewItemsServerIds', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({page})
+        });
+        const itemFromServer = await itemFromServerJSON.json();
+        const item_ids = itemFromServer.map(item=>item.item_id);
+        return item_ids;
+    },
     uploadImage: async (url)=>{
         const image = functions.getImageFromUrl(url);
         // upload file to monday.com
@@ -1625,6 +1676,43 @@ const pages = {
             });
         }
     },
+    itemsView: async()=>{
+        const viewItemsServerIds = await dataLoads.viewItemsServerIds();
+        const mondayItems = await dataLoads.viewItemsMondayItems(viewItemsServerIds);
+        const main = document.getElementById('main');
+        main.classList = 'd-flex flex-wrap';
+        for(let i = 0; i < mondayItems.length; i++){
+            const mondayItem = mondayItems[i];
+            const item= document.createElement('div');
+            item.classList = 'w-300px box-shadow-inset font-normal fs-20px';
+            item.innerHTML = `
+                ${mondayItem.name}<br>
+                ${mondayItem.id}<br>
+                ${mondayItem.status}<br>
+                ${mondayItem.board}<br>
+                ${mondayItem.state}<br>
+            `;
+            const button = document.createElement('button');
+            button.innerText = 'delete from database';
+            button.setAttribute('data-item_id', mondayItem.id);
+            button.onclick = async()=>{
+                const item_id = button.getAttribute('data-item_id');
+                const deleteItem = await fetch('/api/deleteItemFromServer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({item_id})
+                });
+                if(deleteItem.status === 200){
+                    item.remove();
+                }
+            };
+            item.append(button);
+            main.append(item);
+        }
+        controllers.popup({state:false});
+    }
 };
 
 const view = async()=>{
@@ -1635,8 +1723,9 @@ const view = async()=>{
     }else if(path=='/' || path=='/account' || path=='/account/'){
         await pages.home();
     }else if(path.match(/\/account\/\d+/)){
-        const fb_id = path.split('/')[2];
         await pages.account();
+    }else if(path=='/itemsView' || path=='/itemsView/'){
+        await pages.itemsView();
     }else{
         await pages.notFound();
     }
