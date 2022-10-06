@@ -188,26 +188,32 @@ router.post('/sendMessagesToServer',async (req, res) => {
     const messages = req.fields.messageData;
     for(let i = 0; i < messages.length; i++){
         await Message.create(messages[i]);
-        webSocket.to(`item_id_${messages[i].item_id}`).emit('response',{
-            action: 'sellerSentNewMessage',
-            data: messages[i]
-        });
-        webSocket.to(`fb_id_${messages[i].fb_id}`).emit('response',{
-            action: 'notifySellerNewMessage',
-            data:{
-                item_id: messages[i].item_id,
-            }
-        });
+        if(messages[i].sent_from == 'seller'){
+            webSocket.to(`item_id_${messages[i].item_id}`).emit('response',{
+                action: 'sellerSentNewMessage',
+                data: messages[i]
+            });
+            webSocket.to(`fb_id_${messages[i].fb_id}`).emit('response',{
+                action: 'notifySellerNewMessage',
+                data:{
+                    item_id: messages[i].item_id,
+                }
+            });
+        }
     }
     if(messages.length > 0){
         const item_id = messages[0].item_id;
-        await Item.update({
-            has_unread_message: true
-        },{
-            where: {
-                item_id: item_id
-            }
-        });
+        // where sent_from is "seller"
+        const sent_from_seller = messages.filter(message => message.sent_from === 'seller');
+        if(sent_from_seller.length > 0){
+            await Item.update({
+                has_unread_message: true
+            },{
+                where: {
+                    item_id: item_id
+                }
+            });
+        }
     }
     res.json({});
 });
@@ -226,7 +232,7 @@ router.post('/getUnsentMessagePostIds', async (req, res) => {
     });
     let item_ids = items.map(item => item.item_id);
     // get first 10
-    item_ids = item_ids.slice(0, 10);
+    item_ids = item_ids.slice(0, 5);
     // get post ids from items
     const post_ids = await Item.findAll({
         where: {
