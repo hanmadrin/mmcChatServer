@@ -3,6 +3,7 @@ const router = express.Router();
 const {webSocket} = require('../setup');
 // const Message = require('../models/Message');
 const Sequelize = require('sequelize');
+const sequelize = require('../configs/database');
 const Item = require('../models/Item');
 const RawItem = require('../models/RawItem');
 const Script = require('../models/Script');
@@ -169,6 +170,37 @@ router.post('/lastMessageOnServerByPostId', async (req, res) => {
         res.sendStatus(404);
     }
 });
+// hasRepliesToSend
+router.post('/hasRepliesToSend', async (req, res) => {
+    const fb_id = req.fields.fb_id;
+    const unsentMessage = await Message.findAll({
+        limit: 1,
+        where: {
+            fb_id: fb_id,
+            status: 'unsent'
+        },
+        attributes: ['id'],
+    });
+    if(unsentMessage.length > 0){
+        res.json({status: true, item_id: unsentMessage[0].item_id});
+    }else{
+        res.json({status: false});
+    }
+});
+// hasSecondMessageToSend
+router.post('/hasSecondMessageToSend', async (req, res) => {
+    const fb_id = req.fields.fb_id;
+    // where only first message done
+    const time = parseInt(new Date().getTime());
+    const threedays = 1000 * 60 * 60 * 24 * 3;
+    const threeDaysAgo = time - threedays;
+    const item = await sequelize.query(`SELECT item_id FROM messages WHERE fb_id = '${fb_id}' AND status = 'done' AND timestamp < ${threeDaysAgo} GROUP BY item_id HAVING COUNT(*) = 1 LIMIT 1`, { type: sequelize.QueryTypes.SELECT });
+    if(item.length > 0){
+        res.json({status: true,item_id: item[0].item_id});
+    }else{
+        res.json({status: false});
+    }
+});
 router.post('/itemIdByPostId', async (req, res) => {
     const fb_post_id = req.fields.fb_post_id;
     const item = await Item.findOne({
@@ -182,6 +214,50 @@ router.post('/itemIdByPostId', async (req, res) => {
     }else{
         res.sendStatus(404);
     }
+});
+// postIdByItemId
+router.post('/postIdByItemId', async (req, res) => {
+    const item_id = req.fields.item_id;
+    const item = await Item.findOne({
+        where: {
+            item_id: item_id
+        },
+        attributes: ['fb_post_id']
+    });
+    if(item){
+        res.json(item);
+    }else{
+        res.sendStatus(404);
+    }
+});
+// setSecondMessage
+router.post('/setSecondMessage', async (req, res) => {
+    const item_id = req.fields.item_id;
+    const fb_id = req.fields.fb_id;
+    const timeStamp = parseInt(new Date().getTime());
+    const secondMessageScript = await Script.findOne({
+        where: {
+            code: 'secondMessage'
+        }
+    });
+    await Message.create({
+        item_id: item_id,
+        message: secondMessageScript.content,
+        timestamp: `${timeStamp}`,
+        type: 'text',
+        sent_from: 'me',
+        fb_id: fb_id,
+        status: 'unsent'
+    });
+    await Item.update({
+        last_auto_step: 'secondMessage',
+        last_auto_timestamp: `${timeStamp}`,
+    },{
+        where: {
+            item_id: item_id
+        }
+    });
+    res.json({status: true});
 });
 // need socket
 router.post('/sendMessagesToServer',async (req, res) => {
@@ -232,7 +308,7 @@ router.post('/getUnsentMessagePostIds', async (req, res) => {
     });
     let item_ids = items.map(item => item.item_id);
     // get first 10
-    item_ids = item_ids.slice(0, 5);
+    item_ids = item_ids.slice(0, 1);
     // get post ids from items
     const post_ids = await Item.findAll({
         where: {
