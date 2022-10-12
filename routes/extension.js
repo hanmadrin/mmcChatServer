@@ -202,6 +202,7 @@ router.post('/hasSecondMessageToSend', async (req, res) => {
     }
 });
 router.get('/test/:fb_id', async (req, res) => {
+    const fb_id = req.params.fb_id;
     const time = parseInt(new Date().getTime());
     const threedays = 1000 * 60 * 60 * 24 * 3;
     const threeDaysAgo = time - threedays;
