@@ -201,11 +201,11 @@ router.post('/hasSecondMessageToSend', async (req, res) => {
         res.json({status: false});
     }
 });
-router.get('/test', async (req, res) => {
+router.get('/test/:fb_id', async (req, res) => {
     const time = parseInt(new Date().getTime());
     const threedays = 1000 * 60 * 60 * 24 * 3;
     const threeDaysAgo = time - threedays;
-    const item = await sequelize.query(`SELECT item_id FROM ( SELECT * FROM messages GROUP BY item_id HAVING COUNT(*) = 1 ) AS unique_item_id_group WHERE unique_item_id_group.fb_id='${100010329994921}' AND unique_item_id_group.timestamp < '${threeDaysAgo}' AND unique_item_id_group.item_id IN (SELECT item_id from items WHERE items.last_auto_step='initialMessage') `, { type: sequelize.QueryTypes.SELECT });
+    const item = await sequelize.query(`SELECT item_id FROM ( SELECT * FROM messages GROUP BY item_id HAVING COUNT(*) = 1 ) AS unique_item_id_group WHERE unique_item_id_group.fb_id='${fb_id}' AND unique_item_id_group.timestamp < '${threeDaysAgo}' AND unique_item_id_group.item_id IN (SELECT item_id from items WHERE items.last_auto_step='initialMessage') `, { type: sequelize.QueryTypes.SELECT });
     if(item.length > 0){
         res.json({status: true,item_id: item[0].item_id});
     }else{
