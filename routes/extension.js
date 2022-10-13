@@ -67,7 +67,8 @@ router.post('/firstMessageText', async (req, res) => {
         where: {
             code: 'initialMessage'
         },
-        attributes: ['content']
+        attributes: ['content'],
+        order: sequelize.random()
     });
     res.json(message.content);
 });
@@ -78,15 +79,18 @@ router.post('/saveFirstMessageAction', async (req, res) => {
         }
     });
     const timeStamp = parseInt(new Date().getTime());
+    // select one random
+
     const initialMessageScript = await Script.findOne({
         where: {
             code: 'initialMessage'
-        }
+        },
+        order: sequelize.random()
     });
     if(!message){
         await Message.create({
             item_id: req.fields.item_id,
-            message: initialMessageScript.content,
+            message: req.fields.messageText?req.fields.messageText:initialMessageScript.content,
             timestamp: `${timeStamp}`,
             type: 'text',
             sent_from: 'me',
@@ -201,17 +205,25 @@ router.post('/hasSecondMessageToSend', async (req, res) => {
         res.json({status: false});
     }
 });
-router.get('/test/:fb_id', async (req, res) => {
-    const fb_id = req.params.fb_id;
-    const time = parseInt(new Date().getTime());
-    const threedays = 1000 * 60 * 60 * 24 * 3;
-    const threeDaysAgo = time - threedays;
-    const item = await sequelize.query(`SELECT item_id FROM ( SELECT * FROM messages GROUP BY item_id HAVING COUNT(*) = 1 ) AS unique_item_id_group WHERE unique_item_id_group.fb_id='${fb_id}' AND unique_item_id_group.timestamp < '${threeDaysAgo}' AND unique_item_id_group.item_id IN (SELECT item_id from items WHERE items.last_auto_step='initialMessage') `, { type: sequelize.QueryTypes.SELECT });
-    if(item.length > 0){
-        res.json({status: true,item_id: item[0].item_id});
-    }else{
-        res.json({status: false});
-    }
+router.get('/test', async (req, res) => {
+    // const fb_id = req.params.fb_id;
+    // const time = parseInt(new Date().getTime());
+    // const threedays = 1000 * 60 * 60 * 24 * 3;
+    // const threeDaysAgo = time - threedays;
+    // const item = await sequelize.query(`SELECT item_id FROM ( SELECT * FROM messages GROUP BY item_id HAVING COUNT(*) = 1 ) AS unique_item_id_group WHERE unique_item_id_group.fb_id='${fb_id}' AND unique_item_id_group.timestamp < '${threeDaysAgo}' AND unique_item_id_group.item_id IN (SELECT item_id from items WHERE items.last_auto_step='initialMessage') `, { type: sequelize.QueryTypes.SELECT });
+    // if(item.length > 0){
+    //     res.json({status: true,item_id: item[0].item_id});
+    // }else{
+    //     res.json({status: false});
+    // }
+    const message = await Script.findOne({
+        where: {
+            code: 'initialMessage'
+        },
+        attributes: ['content'],
+        order: sequelize.random()
+    });
+    res.json(message.content);
 });
 router.post('/itemIdByPostId', async (req, res) => {
     const fb_post_id = req.fields.fb_post_id;
