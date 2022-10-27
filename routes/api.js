@@ -7,7 +7,9 @@ const RawItem = require('../models/RawItem');
 const Script = require('../models/Script');
 const env = require('dotenv').config();
 const Sequelize = require('sequelize');
-
+const sequelize = require('../configs/database');
+const ArchiveItem = require('../models/ArchiveItem');
+const ArchiveMessage = require('../models/ArchiveMessage');
 router.post('/collectRawItems', async (req, res) => {
 
     res.sendStatus(200);
@@ -238,25 +240,29 @@ router.post('/sendMessage', async (req, res) => {
         status,
         type
     };
-    await Message.create(messageData);
-    webSocket.to(`fb_id_${fb_id}`).emit('response', {
-        action: 'notifyLastMessageFromMe',
-        data:{
-            item_id,
-            fb_id
-        }
-    });
-    webSocket.to(`item_id_${item_id}`).emit('response', {
-        action: 'newMessageFromMe',
-        data:{
-            fb_id,
-            item_id,
-            message,
-            sent_from,
-            mmc_user,
-            type
-        }
-    });
+    const item = await Item.findOne({where: {item_id: item_id}});
+    if(item){
+        await Message.create(messageData);
+        webSocket.to(`fb_id_${fb_id}`).emit('response', {
+            action: 'notifyLastMessageFromMe',
+            data:{
+                item_id,
+                fb_id
+            }
+        });
+        webSocket.to(`item_id_${item_id}`).emit('response', {
+            action: 'newMessageFromMe',
+            data:{
+                fb_id,
+                item_id,
+                message,
+                sent_from,
+                mmc_user,
+                type
+            }
+        });
+    }
+    
     res.json({});
 });
 // itemsView
@@ -276,7 +282,13 @@ router.post('/viewItemsServerIds', async (req, res) => {
 // deleteItemFromServer
 router.post('/deleteItemFromServer', async (req, res) => {
     const item_id = req.fields.item_id;
+    const fb_id = req.fields.fb_id;
     await Item.destroy({
+        where: {
+            item_id: item_id
+        }
+    });
+    await ArchiveItem.destroy({
         where: {
             item_id: item_id
         }
@@ -284,6 +296,64 @@ router.post('/deleteItemFromServer', async (req, res) => {
     await Message.destroy({
         where: {
             item_id: item_id
+        }
+    });
+    await ArchiveMessage.destroy({
+        where: {
+            item_id: item_id
+        }
+    });
+    webSocket.to(`fb_id_${fb_id}`).emit('response', {
+        action: 'itemRemoved',
+        data:{
+            item_id,
+            fb_id
+        }
+    });
+    res.json({});
+});
+// archiveItemOnServer
+router.post('/archiveItemOnServer', async (req, res) => {
+    const item_id = req.fields.item_id;
+    const fb_id = req.fields.fb_id;
+    const item = await Item.findOne({where: {item_id: item_id}});
+    const messages = await Message.findAll({where: {item_id: item_id, status:'done'}});
+    if(item){
+        delete item.dataValues.id;
+        const archiveItem = item.dataValues;
+        let archiveMessages = [];
+        for(let i = 0; i < messages.length; i++){
+            delete messages[i].dataValues.id;
+            archiveMessages.push(messages[i].dataValues);
+        }
+        const transaction = await sequelize.transaction();
+        try {
+            console.log(item);
+            await ArchiveItem.create(archiveItem, {transaction: transaction});
+            await Item.destroy({
+                where: {
+                    item_id: item_id
+                },
+                transaction: transaction
+            });
+            await ArchiveMessage.bulkCreate(archiveMessages, {transaction: transaction});
+            await Message.destroy({
+                where: {
+                    item_id: item_id
+                },
+                transaction: transaction
+            });
+            await transaction.commit();
+        } catch (error) {
+            console.log(error);
+            console.log('error occured')
+        }
+    }
+    webSocket.to(`fb_id_${fb_id}`).emit('response', {
+        action: 'itemRemoved',
+        data:{
+            item_id,
+            fb_id
         }
     });
     res.json({});

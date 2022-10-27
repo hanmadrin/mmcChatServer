@@ -8,7 +8,8 @@ const Item = require('../models/Item');
 const RawItem = require('../models/RawItem');
 const Script = require('../models/Script');
 const Message = require('../models/Message');
-
+const ArchiveItem = require('../models/ArchiveItem');
+const ArchiveMessage = require('../models/ArchiveMessage');
 router.post('/unseenMessageIDs', async (req, res) => {
     const unseenMessageIDs = req.fields.ids;
     let unknownIds = [];
@@ -126,12 +127,27 @@ router.post('/isValidMessageId', async (req, res) => {
     const fb_post_id = req.fields.fb_post_id;
     const fb_message_id = req.fields.fb_message_id;
     const fb_id = req.fields.fb_id;
+    const archiveItem = await ArchiveItem.findOne({
+        where: {
+            fb_post_id: fb_post_id,
+            fb_id: fb_id
+        }
+    });
     const item = await Item.findOne({
         where: {
             fb_post_id: fb_post_id,
             fb_id:  fb_id
         }
     });
+    if(archiveItem){
+        await item.update({
+            fb_message_id: fb_message_id
+        },{
+            where: {
+                fb_post_id: fb_post_id
+            }
+        });
+    }
     if(item){
         await item.update({
             fb_message_id: fb_message_id
@@ -140,11 +156,12 @@ router.post('/isValidMessageId', async (req, res) => {
                 fb_post_id: fb_post_id
             }
         });
+    }
+    if(archiveItem || item){
         res.json({valid: true});
     }else{
         res.json({valid: false});
     }
-
 });
 router.post('/lastMessageOnServerByPostId', async (req, res) => {
     const fb_post_id = req.fields.fb_post_id;
@@ -198,7 +215,7 @@ router.post('/hasSecondMessageToSend', async (req, res) => {
     const time = parseInt(new Date().getTime());
     const threedays = 1000 * 60 * 60 * 24 * 3;
     const threeDaysAgo = time - threedays;
-    const item = await sequelize.query(`SELECT item_id FROM ( SELECT * FROM messages GROUP BY item_id HAVING COUNT(*) = 1 ) AS unique_item_id_group WHERE unique_item_id_group.fb_id='${fb_id}' AND unique_item_id_group.timestamp < '${threeDaysAgo}' AND unique_item_id_group.item_id IN (SELECT item_id from items WHERE items.last_auto_step='initialMessage') `, { type: sequelize.QueryTypes.SELECT });
+    const item = await sequelize.query(`SELECT item_id FROM ( SELECT * FROM messages GROUP BY item_id HAVING COUNT(*) = 1 ) AS unique_item_id_group WHERE unique_item_id_group.fb_id='${fb_id}' AND unique_item_id_group.timestamp < '${threeDaysAgo}' AND unique_item_id_group.item_id IN (SELECT item_id from items WHERE items.last_auto_step='initialMessage') `);
     if(item.length > 0){
         res.json({status: true,item_id: item[0].item_id});
     }else{
@@ -216,14 +233,6 @@ router.get('/test', async (req, res) => {
     // }else{
     //     res.json({status: false});
     // }
-    const message = await Script.findOne({
-        where: {
-            code: 'initialMessage'
-        },
-        attributes: ['content'],
-        order: sequelize.random()
-    });
-    res.json(message.content);
 });
 router.post('/itemIdByPostId', async (req, res) => {
     const fb_post_id = req.fields.fb_post_id;
@@ -284,28 +293,74 @@ router.post('/setSecondMessage', async (req, res) => {
     res.json({status: true});
 });
 // need socket
+
 router.post('/sendMessagesToServer',async (req, res) => {
-    const messages = req.fields.messageData;
-    for(let i = 0; i < messages.length; i++){
-        await Message.create(messages[i]);
-        if(messages[i].sent_from == 'seller'){
-            webSocket.to(`item_id_${messages[i].item_id}`).emit('response',{
-                action: 'sellerSentNewMessage',
-                data: messages[i]
-            });
-            webSocket.to(`fb_id_${messages[i].fb_id}`).emit('response',{
-                action: 'notifySellerNewMessage',
-                data:{
-                    item_id: messages[i].item_id,
+    const newMessages = req.fields.messageData;
+    if(newMessages.length > 0){
+        const item_id = newMessages[0].item_id;
+        const archiveItem = await ArchiveItem.findOne({where: {item_id: item_id}});
+        const item = await Item.findOne({where: {item_id: item_id}});
+        let restored = false;
+        if(archiveItem){
+            const archiveMessages = await ArchiveMessage.findAll({where: {item_id: item_id}});
+            const sent_from_seller = newMessages.filter(message => message.sent_from === 'seller').length > 0;
+            if(sent_from_seller){
+                delete archiveItem.dataValues.id;
+                const item = archiveItem.dataValues;
+                console.log(item);
+                let messages = [];
+                for(let i = 0; i < archiveMessages.length; i++){
+                    delete archiveMessages[i].dataValues.id;
+                    messages.push(archiveMessages[i].dataValues);
                 }
-            });
-        }
-    }
-    if(messages.length > 0){
-        const item_id = messages[0].item_id;
-        // where sent_from is "seller"
-        const sent_from_seller = messages.filter(message => message.sent_from === 'seller');
-        if(sent_from_seller.length > 0){
+                for(let i = 0; i < newMessages.length; i++){
+                    messages.push(newMessages[i]);
+                }
+                const transaction = await sequelize.transaction();
+                try {
+                    console.log(messages);
+                    restored = true;
+                    await Item.create(item, {transaction: transaction});
+                    await ArchiveItem.destroy({
+                        where: {
+                            item_id: item_id
+                        },
+                        transaction: transaction
+                    });
+                    await Message.bulkCreate(messages, {transaction: transaction});
+
+                    await ArchiveMessage.destroy({
+                        where: {
+                            item_id: item_id
+                        },
+                        transaction: transaction
+                    });
+                    await transaction.commit();
+                } catch (error) {
+                    console.log('error occured');
+                    console.log(error);
+                }
+
+            }else{
+                res.json({restored:restored});
+                return;
+            }
+        }else if(item){
+            for(let i = 0; i < newMessages.length; i++){
+                if(newMessages[i].sent_from == 'seller'){
+                    await Message.create(newMessages[i]);
+                    webSocket.to(`item_id_${newMessages[i].item_id}`).emit('response',{
+                        action: 'sellerSentNewMessage',
+                        data: newMessages[i]
+                    });
+                    webSocket.to(`fb_id_${newMessages[i].fb_id}`).emit('response',{
+                        action: 'notifySellerNewMessage',
+                        data:{
+                            item_id: newMessages[i].item_id,
+                        }
+                    });
+                }
+            }
             await Item.update({
                 has_unread_message: true
             },{
@@ -320,7 +375,6 @@ router.post('/sendMessagesToServer',async (req, res) => {
 router.post('/getUnsentMessagePostIds', async (req, res) => {
     const fb_id = req.fields.fb_id;
     const items = await Message.findAll({
-        // limit: 10,
         where: {
             fb_id: fb_id,
             status: 'unsent'
@@ -330,10 +384,8 @@ router.post('/getUnsentMessagePostIds', async (req, res) => {
         ],
     });
     let item_ids = items.map(item => item.item_id);
-    // get first 10
-    item_ids = item_ids.slice(0, 1);
-    // get post ids from items
     const post_ids = await Item.findAll({
+        limit:1,
         where: {
             item_id: {
                 [Sequelize.Op.in]: item_ids
@@ -382,11 +434,16 @@ router.post('/markMessageAsSent', async (req, res) => {
 // markItemMessagesdone
 router.post('/markItemMessagesDone', async (req, res) => {
     const item_id = req.fields.item_id;
-    await Message.update({
-        status: 'done'
-    },{
+    await Message.destroy({
         where: {
-            item_id: item_id
+            item_id: item_id,
+            status: 'unsent'
+        }
+    });
+    await ArchiveMessage.destroy({
+        where: {
+            item_id: item_id,
+            status: 'unsent'
         }
     });
     res.json({});
@@ -405,9 +462,26 @@ router.post('/serverLinkGoneUpdate', async (req, res) => {
             item_id: item_id
         }
     });
+    await ArchiveItem.destroy({
+        where: {
+            item_id: item_id
+        }
+    });
     await Message.destroy({
         where: {
             item_id: item_id
+        }
+    });
+    await ArchiveMessage.destroy({
+        where: {
+            item_id: item_id
+        }
+    });
+    webSocket.to(`fb_id_${item_id}`).emit('response', {
+        action: 'itemRemoved',
+        data:{
+            item_id,
+            fb_id
         }
     });
     res.json({});

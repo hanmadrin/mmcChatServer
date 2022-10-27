@@ -9,6 +9,7 @@ module.exports =  new sequelize(
         dialect: 'mysql',
         dialectOptions: {
             charset: 'utf8',
+            multipleStatements: true
         }
     }
 );

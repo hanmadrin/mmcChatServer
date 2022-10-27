@@ -30,7 +30,7 @@ const globals = {
                 "BAD",
                 "Verified W/Vin",
                 "1st MSG",
-                "Raw Vin",
+                "HELP",
                 "MSG 1st Offer",
                 "Seller Counter",
                 "Multi-Counter",
@@ -59,10 +59,13 @@ const globals = {
                 "Invalid Vin",
                 "Pass $",
                 "Initial Offer",
+                "$$toldtopass",
                 "Adj/Declined BOR- Pass",
+                "$To Acquire!",
+                "NEEDS TEXT",
                 "Close Initial Offer",
-                "BOR Confirmed",
-                "$To Acquire!"
+                "Archived",
+                // "BOR Confirmed",
             ]
         },
         allColumnIds:{
@@ -300,7 +303,8 @@ const callbacks = {
             }
         })
         await view();
-    }
+    },
+    
 };
 const popups = {
     login: ({state})=>{
@@ -769,6 +773,103 @@ const dataLoads = {
         const mondayItemsDataJson = await functions.mondayFetch(query);
         const mondayItemsdata = await mondayItemsDataJson.json();
         return mondayItemsdata;
+    },
+    deleteItemFromServer: async ({item_id,fb_id})=>{
+        console.log('deleteItemFromServer');
+        if(item_id){
+            const query = `
+                query{
+                    items(ids: [${item_id}]){
+                        board{
+                            id
+                        }
+                    }
+                }
+            `;
+            const boardDataJSON = await functions.mondayFetch(query);
+            const boardData = await boardDataJSON.json();
+            const boardId = boardData.data.items[0].board.id;
+            if(boardId==globals.mondayFetch.borEffortBoardId || boardId==globals.mondayFetch.appraisalCounterBoard){
+                const columnId = boardId==globals.mondayFetch.borEffortBoardId?globals.mondayFetch.columnValuesIds.borEffortBoard.status:globals.mondayFetch.columnValuesIds.appraisalCounterBoard.status;
+                const query = `
+                    mutation {
+                        change_simple_column_value(
+                            item_id: ${item_id}, 
+                            board_id: ${boardId}, 
+                            column_id: "${columnId}", 
+                            value: "Link Gone") {
+                            id
+                        }
+                    }
+                `;
+                const itemDataJSON = await functions.mondayFetch(query);
+                const itemData = await itemDataJSON.json();
+                const query1 = `
+                    mutation {
+                        archive_item(item_id: ${item_id}) {
+                            id
+                        }
+                    }
+                `;
+                const itemDataJSON1 = await functions.mondayFetch(query1);
+                const itemData1 = await itemDataJSON1.json();
+            }
+            const deleteItem = await fetch(`/api/deleteItemFromServer`,{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    item_id: `${item_id}`,
+                    fb_id: `${fb_id}`,
+                })
+            });
+            await deleteItem.json();
+        }
+    },
+    archiveItemOnServer: async ({item_id,fb_id})=>{
+        console.log('archiveItemOnServer');
+        if(item_id){
+            const query = `
+                query{
+                    items(ids: [${item_id}]){
+                        board{
+                            id
+                        }
+                    }
+                }
+            `;
+            const boardDataJSON = await functions.mondayFetch(query);
+            const boardData = await boardDataJSON.json();
+            const boardId = boardData.data.items[0].board.id;
+            if(boardId==globals.mondayFetch.borEffortBoardId){
+                const columnId = globals.mondayFetch.columnValuesIds.borEffortBoard.status;
+                const query = `
+                    mutation {
+                        change_simple_column_value(
+                            item_id: ${item_id}, 
+                            board_id: ${boardId}, 
+                            column_id: "${columnId}", 
+                            value: "Archived") {
+                            id
+                        }
+                    }
+                `;
+                const itemDataJSON = await functions.mondayFetch(query);
+                const itemData = await itemDataJSON.json();
+            }
+            const archiveItem = await fetch(`/api/archiveItemOnServer`,{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    item_id: `${item_id}`,
+                    fb_id: `${fb_id}`,
+                })
+            });
+            await archiveItem.json();
+        }
     }
 };
 const controllers = {
@@ -915,7 +1016,7 @@ const controllers = {
                     // signal.classList = 'w-10px h-10px border-round d-inline-block mr-5px position-absolute right-10px top-10px';
                     // signal.setAttribute('data-signal',(item.has_unread_message)?'unread':'read');
                     
-                    itemBox.classList = 'py-15px cursor-pointer font-normal my-5px px-5px position-relative';
+                    itemBox.classList = 'py-15px cursor-pointer font-normal my-5px px-5px position-relative single_message_item_archive_feature_parent';
                     itemBox.setAttribute('data-last_message', item.has_unread_message?'new':item.last_message);
                     if(item.item_id==new URL(window.location.href).searchParams.get('item_id')){
                         itemBox.setAttribute('data-selected', 'yes');
@@ -924,6 +1025,8 @@ const controllers = {
                     itemBox.setAttribute('data-fb_seller_name', item.fb_seller_name);
 
                     itemBox.innerText = item.fb_seller_name;
+                    const fb_id = window.location.pathname.split('/')[2];
+                    itemBox.append(components.archiveOptions({item_id:item.item_id,fb_id:fb_id}));
                     // itemBox.append(signal);
                     itemBox.addEventListener('click', async()=>{
                         window.history.pushState({},"", `?item_id=${item.item_id}`);
@@ -965,6 +1068,20 @@ const controllers = {
         const messageItem = allMessageSection.querySelector(`[data-item_id="${data.item_id}"]`);
         if(messageItem){
             messageItem.setAttribute('data-last_message', data.last_message);
+        }
+    },
+    itemRemoved: (data)=>{
+        const allMessageSection = document.getElementById('allMessageSection');
+        const messageItem = allMessageSection.querySelector(`[data-item_id="${data.item_id}"]`);
+        if(messageItem){
+            messageItem.remove();
+        }
+        const url = new URL(window.location.href);
+        if(url.searchParams.get('item_id')==data.item_id){
+            url.searchParams.delete('item_id');
+            window.history.pushState({},`${url.href}`);
+            controllers.singleItemMessage(null);
+            controllers.mondayItem({itemData:null,choice:'columns'});
         }
     },
     singleItemMessage: (itemData)=>{
@@ -1399,33 +1516,120 @@ const controllers = {
         await functions.sleep(3000);
         newNotification.remove();
     },
-     
+    itemArchiving: async({item_id,fb_id,action,force})=>{      
+        if(action=='delete'){
+            if(force){
+                controllers.popup({
+                    state:true,
+                    content: popups.loader(),
+                    options: {backDrop:false,removeButton:false}
+                });
+                try{
+                    await dataLoads.deleteItemFromServer({item_id,fb_id});
+                    controllers.notify({data:'Item deleted',type:'success'});
+                }catch(e){
+                    console.log(e);
+                    controllers.notify({data:'Item not deleted',type:'danger'});
+                }
+                controllers.popup({state:false});
+            }else{
+                controllers.popup({
+                    state:true,
+                    content:popups.confirmation({
+                        title:'Delete item',
+                        message:'Are you sure? This action will delete the item from Interface and mark as Archived in Monday.com',
+                        callback:async()=>{
+                            await controllers.itemArchiving({item_id,fb_id,action:'delete',force:true});
+                        }
+                    }),
+                    options:{
+                        backDrop:true,
+                        removeButton:true,
+                    }
+                });
+            }
+        }else if(action=='archive'){
+            if(force){
+                controllers.popup({
+                    state:true,
+                    content: popups.loader(),
+                    options: {backDrop:false,removeButton:false}
+                });
+                await dataLoads.archiveItemOnServer({item_id,fb_id});
+                controllers.popup({state:false});
+            }else{
+                controllers.popup({
+                    state:true,
+                    content:popups.confirmation({
+                        title:'Archive item',
+                        message:'Are you sure? You will not be able to see this item unless seller message back',
+                        callback:async()=>{
+                            await controllers.itemArchiving({item_id,fb_id,action:'archive',force:true});
+                        }
+                    }),
+                    options:{
+                        backDrop:true,
+                        removeButton:true,
+                    }
+                });
+            }
+        }
+    },
 };
 const components = {
-    crossButton: ({size=30})=>{
+    crossButton: ({size=30,options={color:'white'}})=>{
         const designCross = document.createElement('div');
         const crossButton = document.createElement('div');
         const designCrossFirst = document.createElement('div');
         const designCrossSecond = document.createElement('div');
         designCrossFirst.classList = 'first';
         designCrossSecond.classList = 'second';
+        designCrossFirst.style.backgroundColor = options.color;
+        designCrossSecond.style.backgroundColor = options.color;
         designCross.append(designCrossFirst, designCrossSecond);
         designCross.classList = 'design-cross';
         designCross.style.height = `${size}px`;
         designCross.style.width = `${size}px`;
-        designCrossFirst.style.left = `${size/2-(size/100*3)}px`;
-        designCrossSecond.style.left = `${size/2-(size/100*3)}px`;
+        designCrossFirst.style.left = `${size/2-(size/100*5)}px`;
+        designCrossSecond.style.left = `${size/2-(size/100*5)}px`;
         designCrossFirst.style.height = `${size}px`;
         designCrossSecond.style.height = `${size}px`;
-        designCrossFirst.style.width = `${size/100*6}px`;
-        designCrossSecond.style.width = `${size/100*6}px`;
-        designCrossFirst.style.borderRadius = `${size/100*6}px`;
-        designCrossSecond.style.borderRadius = `${size/100*6}px`;
+        designCrossFirst.style.width = `${size/100*10}px`;
+        designCrossSecond.style.width = `${size/100*10}px`;
+        designCrossFirst.style.borderRadius = `${size/100*10}px`;
+        designCrossSecond.style.borderRadius = `${size/100*10}px`;
         crossButton.classList = 'position-relative d-flex justify-content-center align-items-center cursor-pointer';
         crossButton.style.height = `${size}px`;
         crossButton.style.width = `${size}px`;
         crossButton.append(designCross);
         return crossButton;
+    },
+    banButton: ({size=30,options={color:'white'}})=>{
+        const designBan = document.createElement('div');
+        const banButton = document.createElement('div');
+        const designBanFirst = document.createElement('div');
+        const designBanSecond = document.createElement('div');
+        designBanFirst.classList = 'first';
+        designBanSecond.classList = 'second';
+        designBanSecond.style.backgroundColor = options.color;
+        designBan.append(designBanFirst, designBanSecond);
+        designBan.classList = 'design-ban';
+        designBan.style.height = `${size}px`;
+        designBan.style.width = `${size}px`;
+        designBanFirst.style.left = '0px';
+        designBanFirst.style.top = `0px`;
+        designBanFirst.style.height = `${size}px`;
+        designBanFirst.style.width = `${size}px`;
+        designBanFirst.style.boxShadow = `inset 0px 0px 0px ${size/100*10}px ${options.color}`;
+        designBanSecond.style.left = `${size/2-(size/100*5)}px`;
+        designBanSecond.style.height = `${size}px`;
+        designBanSecond.style.width = `${size/100*10}px`;
+        designBanSecond.style.borderRadius = `${size/100*10}px`;
+        banButton.classList = 'position-relative d-flex justify-content-center align-items-center cursor-pointer';
+        banButton.style.height = `${size}px`;
+        banButton.style.width = `${size}px`;
+        banButton.append(designBan);
+        return banButton;
     },
     loaderCircle: ({size=30})=>{
         const loaderCircle = document.createElement('div');
@@ -1501,6 +1705,27 @@ const components = {
         }
         messageBox.append(messageContent);
         return messageBox;
+    },
+    archiveOptions: ({item_id,fb_id})=>{
+        console.log(fb_id);
+        const archiveHolder = document.createElement('div');
+        archiveHolder.onclick = (e)=>{e.stopPropagation()};
+        archiveHolder.classList = 'position-absolute top-0 right-0 single_message_item_archive_feature_holder h-100p w-100px opacity-0 box-shadow-inset';
+        const archiveOptions = document.createElement('div');
+        archiveOptions.classList = 'd-flex justify-content-evenly align-items-center h-100p w-100p';
+        const deleteButton = components.crossButton({size:25,options:{color:'red'}});
+        deleteButton.setAttribute('data-action', 'delete');
+        deleteButton.setAttribute('data-item_id', item_id);
+        deleteButton.title = 'Delete Item';
+        deleteButton.onclick = async()=>{await controllers.itemArchiving({action:'delete',item_id:item_id,fb_id})};
+        const archiveButton = components.banButton({size:25,options:{color:'yellow'}});
+        archiveButton.setAttribute('data-action', 'archive');
+        archiveButton.setAttribute('data-item_id', item_id);
+        archiveButton.title = 'Archive Item';
+        archiveButton.onclick = async()=>{await controllers.itemArchiving({action:'archive',item_id:item_id,fb_id})};
+        archiveOptions.append(archiveButton,deleteButton);
+        archiveHolder.append(archiveOptions);
+        return archiveHolder;
     }
 }
 const pages = {
@@ -1755,6 +1980,9 @@ globals.socket.on('response', async(response)=>{
         break;
         case 'messageIsSeen':
             controllers.messageIsSeen(data);
+        break;
+        case 'itemRemoved':
+            controllers.itemRemoved(data);
         break;
     }
 });
