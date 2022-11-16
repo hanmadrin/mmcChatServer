@@ -259,6 +259,7 @@ body{background-color: var(--dark-bg);padding: 0;margin: 0;}
 .bg-white{background-color:#fff}
 .bg-transparent{background-color:transparent}
 .bg-grey{background-color:#171b3d}
+.bg-black{background-color:#000}
 .opacity-0{opacity:0}
 .opacity-50{opacity:0.5}
 .opacity-75{opacity:0.75}
@@ -285,6 +286,11 @@ body{background-color: var(--dark-bg);padding: 0;margin: 0;}
 
 
 .resize-none{resize:none}
+.h-100p-n10px{height:calc(100% - 10px)}
+.h-100p-n20px{height:calc(100% - 20px)}
+.h-100p-n30px{height:calc(100% - 30px)}
+.h-100p-n40px{height:calc(100% - 40px)}
+.h-100p-n20px{height:calc(100% - 20px)}
 .h-100p-n100px{height:calc(100% - 100px)}
 .h-100p-n110px{height:calc(100% - 110px)}
 .h-100p-n120px{height:calc(100% - 120px)}
@@ -293,6 +299,7 @@ body{background-color: var(--dark-bg);padding: 0;margin: 0;}
 .h-100p{height:100%}
 .h-80p{height:80%}
 .h-100vh{height:100vh}
+.h-0{height:0}
 .h-10px{height:10px}
 .h-20px{height:20px}
 .h-30px{height:30px}
@@ -301,6 +308,7 @@ body{background-color: var(--dark-bg);padding: 0;margin: 0;}
 .h-90px{height:90px}
 .h-100px{height:100px}
 .h-110px{height:110px}
+.h-120px{height:120px}
 .h-150px{height:150px}
 .h-180px{height:180px}
 .h-200px{height:200px}
@@ -367,16 +375,21 @@ body{background-color: var(--dark-bg);padding: 0;margin: 0;}
 
 .break-word{word-break:break-word}
 
+.w-100p-n20px{width:calc(100% - 20px)}
+.w-100p-n30px{width:calc(100% - 30px)}
+.w-100p-n40px{width:calc(100% - 40px)}
 .w-100p{width:100%}
 .w-90p{width:90%}
 .w-80p{width:80%}
 .w-50p{width:50%}
 .w-100vw{width:100vw}
+.w-0{width:0}
 .w-10px{width:10px}
 .w-20px{width:20px}
 .w-30px{width:30px}
 .w-40px{width:40px}
 .w-50px{width:50px}
+.w-80px{width:80px}
 .w-100px{width:100px}
 .w-150px{width:150px}
 .w-180px{width:180px}
@@ -473,7 +486,18 @@ body{background-color: var(--dark-bg);padding: 0;margin: 0;}
 .flex-row-reverse{flex-direction:row-reverse}
 .flex-column-reverse{flex-direction:column-reverse}
 
+.flex-shrink-0{flex-shrink:0}
 
+.transition-p2s{transition:0.2s}
+.transition-p4s{transition:0.4s}
+.transition-p5s{transition:0.5s}
+.transition-p6s{transition:0.6s}
+.transition-p8s{transition:0.8s}
+.transition-1s{transition:1s}
+.transition-2s{transition:2s}
+.transition-3s{transition:3s}
+.transition-4s{transition:4s}
+.transition-5s{transition:5s}
 
 
 

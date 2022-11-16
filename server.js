@@ -25,6 +25,7 @@ webSocket.on('connection', (socket) => {
     //     socket.join(socket.handshake.query.room);
     //     console.log('socket connected to room: '+socket.handshake.query.room);
     // }
+    console.log(socket.id)
     socket.on('update', async function(data){
         const rooms = Array.from(socket.rooms);
         if(data.fb_id){

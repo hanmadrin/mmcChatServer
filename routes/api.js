@@ -10,6 +10,7 @@ const Sequelize = require('sequelize');
 const sequelize = require('../configs/database');
 const ArchiveItem = require('../models/ArchiveItem');
 const ArchiveMessage = require('../models/ArchiveMessage');
+const Account = require('../models/Account');
 router.post('/collectRawItems', async (req, res) => {
 
     res.sendStatus(200);
@@ -354,6 +355,30 @@ router.post('/archiveItemOnServer', async (req, res) => {
         data:{
             item_id,
             fb_id
+        }
+    });
+    res.json({});
+});
+router.post('/getAccountControls', async (req, res) => {
+    const accounts = await Account.findAll({
+        order: [
+            ['deviceId', 'ASC']
+        ]
+    });
+    res.json(accounts);
+});
+// updateAccountControls
+router.post('/updateAccountControls', async (req, res) => {
+    const account = req.fields.data;
+    const id = account.id;
+    delete account.id;
+    let hourlyLimitData = account.hourlyLimitData;
+    hourlyLimitData = JSON.stringify(hourlyLimitData);
+    account.hourlyLimitData = hourlyLimitData;
+    // console.log(account.hourlyLimitData)
+    await Account.update(account,{
+        where: {
+            id: id
         }
     });
     res.json({});

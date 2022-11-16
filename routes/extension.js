@@ -10,6 +10,7 @@ const Script = require('../models/Script');
 const Message = require('../models/Message');
 const ArchiveItem = require('../models/ArchiveItem');
 const ArchiveMessage = require('../models/ArchiveMessage');
+const Account = require('../models/Account');
 router.post('/unseenMessageIDs', async (req, res) => {
     const unseenMessageIDs = req.fields.ids;
     let unknownIds = [];
@@ -447,6 +448,13 @@ router.post('/markItemMessagesDone', async (req, res) => {
         }
     });
     res.json({});
+});
+router.post('/getAccountControlByDeviceId', async (req, res) => {
+    const account = await AccountControl.findOne({
+        where: {
+            device_id: req.fields.device_id
+        }
+    });
 });
 router.post('/serverLinkGoneUpdate', async (req, res) => {
     const item_id = req.fields.item_id;

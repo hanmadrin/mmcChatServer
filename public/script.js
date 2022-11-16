@@ -49,7 +49,8 @@ const globals = {
                 "Manual",
                 "See Field Note",
                 "FlwUpOffer",
-                "Ghosted",
+                "GM Help",
+                "Sup Help",
                 "VIN",
                 "See My Note",
                 "Unverified",
@@ -65,7 +66,7 @@ const globals = {
                 "NEEDS TEXT",
                 "Close Initial Offer",
                 "Archived",
-                // "BOR Confirmed",
+                "Restored",
             ]
         },
         allColumnIds:{
@@ -204,6 +205,7 @@ const globals = {
 // const ;
 const complexes = {
     validUser: async ()=>{
+        // return true;
         if(localStorage.getItem('Authorization')){
             const query = `
                 query {
@@ -870,7 +872,28 @@ const dataLoads = {
             });
             await archiveItem.json();
         }
-    }
+    },
+    getAccountControls: async ()=>{
+        const accountControls = await fetch(`/api/getAccountControls`,{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const accountControlsData = await accountControls.json();
+        return accountControlsData;
+    },
+    updateAccountControls: async (data)=>{
+        const accountControls = await fetch(`/api/updateAccountControls`,{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({data})
+        });
+        const accountControlsData = await accountControls.json();
+        return accountControlsData;
+    },
 };
 const controllers = {
     ground: ()=>{
@@ -1575,6 +1598,124 @@ const controllers = {
             }
         }
     },
+    singleAccountControl: (data)=>{
+        let updatedData = JSON.parse(JSON.stringify(data));
+        const checkUpdates = ()=>{
+            if(JSON.stringify(updatedData)!=JSON.stringify(data)){
+                saveButton.disabled = false; 
+                saveButton.classList.remove('cursor-not-allowed','bg-secondary');
+                saveButton.classList.add('cursor-pointer','bg-primary');
+
+            }else{
+                saveButton.disabled = true; 
+                saveButton.classList.add('cursor-not-allowed','bg-secondary');
+                saveButton.classList.remove('cursor-pointer','bg-primary');
+            }
+        };
+        const updateValue = (e)=>{
+            // e.preventDefault();
+            // console.log(data);
+            // console.log(updatedData);
+            updatedData[e.target.name] = e.target.type=='checkbox'?e.target.checked:e.target.getAttribute('data-type')=='number'?parseInt(e.target.value):e.target.value;
+            checkUpdates();
+        }
+        const controlHolder = document.createElement('div');
+        controlHolder.classList = 'w-400px h-100p  flex-shrink-0';
+        const controlBoard = document.createElement('div');
+        controlBoard.classList = 'w-100p-n40px h-100p-n40px m-20px box-shadow-inset overflow-y-auto';
+        const header = document.createElement('div');
+        header.classList = 'd-flex justify-content-center box-shadow-inset text-white text-center align-items-center position-sticky top-0 h-40px bg-dark zindex-1';
+        const deviceId = document.createElement('div');
+        deviceId.innerText = data.deviceId;
+        const saveButton = document.createElement('button');
+        saveButton.classList = 'text-center font-normal align-self-center bg-secondary border-radius-5px p-5px h-30px position-absolute right-0 top-0 cursor-not-allowed';
+        saveButton.innerText = 'Update';
+        saveButton.disabled = true;
+        saveButton.addEventListener('click', async(e)=>{
+            e.preventDefault();
+            controllers.popup({
+                state:true,
+                content: popups.loader(),
+                options: {backDrop:false,removeButton:false}
+            });
+            try{
+                const intermediateData = JSON.parse(JSON.stringify(updatedData));
+                await dataLoads.updateAccountControls(updatedData);
+                data = intermediateData;
+                checkUpdates();
+                controllers.notify({data:'Account control updated',type:'success'});
+            }catch(e){
+                console.log(e);
+                controllers.notify({data:"Couldn't update properly",type:'danger'});
+            }
+            controllers.popup({state:false});
+        });
+        header.append(deviceId,saveButton);
+        const mainSwitch = components.slideSwitchWithText({backgroundOn:'rgb(29, 160, 80)',value:data.mainSwitch,text:'Main Switch',name:'mainSwitch'});
+        const mainSwitchInput = mainSwitch.querySelector('input');
+        mainSwitchInput.addEventListener('change',updateValue);
+
+        const debugSwitch = components.slideSwitchWithText({backgroundOn:'rgb(29, 160, 80)',value:data.debugSwitch,text:'Debug Switch',name:'debugSwitch'});
+        const debugSwitchInput = debugSwitch.querySelector('input');
+        debugSwitchInput.addEventListener('change',updateValue);
+
+        const textEventListener = (elm,callback)=>{
+            elm.addEventListener('change',callback);
+            elm.addEventListener('input',callback);
+            elm.addEventListener('paste',callback);
+
+        } 
+        const accountName = components.inputWithText({text:'Account Name',value:data.accountName,type:'text',name:'accountName'});
+        const accountNameInput = accountName.querySelector('input');
+        textEventListener(accountNameInput,updateValue);
+        
+        const readMessageLimit = components.inputWithText({text:'Read Message Limit',value:data.readMessageLimit,type:'number',name:'readMessageLimit'});
+        const readMessageLimitInput = readMessageLimit.querySelector('input');
+        textEventListener(readMessageLimitInput,updateValue);
+
+        const readMessageDays = components.inputWithText({text:'Read Message Days',value:data.readMessageDays,type:'number',name:'readMessageDays'});
+        const readMessageDaysInput = readMessageDays.querySelector('input');
+        textEventListener(readMessageDaysInput,updateValue);
+
+        
+
+        
+        controlBoard.append(header,mainSwitch,debugSwitch,accountName,readMessageLimit,readMessageDays);
+        const updateHourlyValue = (e)=>{
+            const keys = e.target.name.split('_');
+            const hourKey = keys[0];
+            const optionKey = keys[1];
+            updatedData.hourlyLimitData[hourKey][optionKey] = parseInt(e.target.value);
+            checkUpdates();
+        };
+        let hourlyLimitData = data.hourlyLimitData;
+        const hours = Object.keys(hourlyLimitData);
+        for(let i=0;i<hours.length;i++){
+            
+            const hour = hours[i].match(/\d/g).join('');
+            const hourBlockHolder = document.createElement('div');
+            hourBlockHolder.classList = 'w-100p h-120px d-flex justify-content-between align-items-center box-shadow-inset';
+            const title = document.createElement('div');
+            title.classList = 'text-white font-normal justify-content-center text-center align-items-center d-flex w-80px h-100p box-shadow-inset bg-black';
+            title.innerHTML = `${hour}:00<br>to<br>${hour}:59`; 
+            const inputs = document.createElement('div');
+            inputs.classList = 'w-100p h-100p d-flex flex-column justify-content-between align-items-center box-shadow-inset';
+            const newMessageLimit = components.inputWithText({text:'New Message Limit',value:hourlyLimitData[hours[i]].n,type:'number',name:`${hours[i]}_n`});
+            const newMessageLimitInput = newMessageLimit.querySelector('input');
+            textEventListener(newMessageLimitInput,updateHourlyValue);
+
+            const repliesLimit = components.inputWithText({text:'Replies Limit',value:hourlyLimitData[hours[i]].r,type:'number',name:`${hours[i]}_r`});
+            const repliesLimitInput = repliesLimit.querySelector('input');
+            textEventListener(repliesLimitInput,updateHourlyValue);
+
+
+            inputs.append(newMessageLimit,repliesLimit);
+            hourBlockHolder.append(title,inputs);
+            controlBoard.append(hourBlockHolder);
+        }
+        controlHolder.append(controlBoard);
+        return controlHolder;
+    },
 };
 const components = {
     crossButton: ({size=30,options={color:'white'}})=>{
@@ -1726,6 +1867,98 @@ const components = {
         archiveOptions.append(archiveButton,deleteButton);
         archiveHolder.append(archiveOptions);
         return archiveHolder;
+    },
+    slideSwitchWithText: ({height=50,backgroundOn='skyblue',backgroundOff='black',value=false,text='Slider Status',textSize='14',textColor='white',name})=>{
+        const main = document.createElement('div');
+        main.classList = 'position-relative w-100p d-flex flex-column justify-content-evenly align-items-center transition-1s box-shadow-inset';
+        main.style.height = `${height}px`;
+        const sliderText = document.createElement('div');
+        sliderText.classList = 'text-center';
+        sliderText.innerText = `${text}: ${value?'On':'Off'}`;
+        sliderText.style.fontSize = `${textSize}px`;
+        sliderText.style.color = textColor;
+
+        const slideSwitchLabel = document.createElement('label');
+        slideSwitchLabel.classList = `w-100px cursor-pointer border-radius-5px position-relative transition-1s`;
+        
+        slideSwitchLabel.style.height = `${height/2.2}px`;
+        slideSwitchLabel.style.width = `${height*1.1}px`;
+        const input = document.createElement('input');
+        input.classList = 'opacity-0 w-0 h-0';
+        input.name = name;
+        input.type = 'checkbox';
+        input.checked = value;
+        const sliderHolder = document.createElement('div');
+        sliderHolder.classList = `w-100p h-100p position-absolute top-0 left-0 d-flex flex-column align-items-center `;
+        const slider = document.createElement('div');
+        slider.classList = `position-absolute transition-p5s`;
+        slider.style.height = `${height/2.2*85/100}px`;
+        slider.style.width = `${height*1.1*85/100/2}px`;
+        const heightDifference = height/2.2-height/2.2*85/100;
+        const widthDifference = height*1.1-height*1.1*85/100;
+        slider.style.top = `${heightDifference/2}px`;
+        slider.style.left = value?`${widthDifference/2+height*1.1*85/100/2}px`:`${widthDifference/2}px`;
+        sliderHolder.append(slider);
+        slideSwitchLabel.append(input,sliderHolder);
+
+        main.style.backgroundColor = value?backgroundOn:'transparent';
+        slideSwitchLabel.style.backgroundColor = value?backgroundOff:backgroundOn;
+        slider.style.backgroundColor = value?backgroundOn:backgroundOff;
+
+        input.onchange = ()=>{
+            const value = input.checked;
+            slider.style.left = value?`${widthDifference/2+height*1.1*85/100/2}px`:`${widthDifference/2}px`;
+            main.style.backgroundColor = value?backgroundOn:'transparent';
+            slideSwitchLabel.style.backgroundColor = value?backgroundOff:backgroundOn;
+            slider.style.backgroundColor = value?backgroundOn:backgroundOff;
+            sliderText.innerText = `${text}: ${value?'On':'Off'}`;
+        };
+        
+        main.append(sliderText,slideSwitchLabel);
+        return main;
+    },
+    inputWithText: ({height=60,value='',text='Input Label',type='text',name})=>{
+        const main = document.createElement('div');
+        main.classList = 'w-100p d-flex flex-column justify-content-end box-shadow-inset';
+        main.style.height = `${height}px`;
+        const inputHolder = document.createElement('div');
+        inputHolder.classList = 'w-100p position-relative';
+        inputHolder.style.height = `${height*65/100}px`;
+        const input = document.createElement('input');
+        input.classList = 'w-100p-n10px h-100p-n10px box-shadow-inset border-0 focus-outline-none color-white px-5px pt-10px bg-transparent text-white';
+        input.type = 'text';
+        input.setAttribute('data-type', type);
+        input.name = name;
+        input.style.fontSize = `${height*26/100}px`;
+        input.value = value;
+        if(type=='number'){
+            // turn text into number
+            const changeIntoNumbers = ()=>{
+                const text = input.value;
+                const numbers = [];
+                for(let i=0;i<text.length;i++){
+                    if(text[i]>='0' && text[i]<='9'){
+                        numbers.push(text[i]);
+                    }
+                }
+                input.value =  numbers.join('')*1;
+            }
+            input.oninput = changeIntoNumbers;
+            input.onchange = changeIntoNumbers;
+            input.onpaste = changeIntoNumbers;
+        }
+        const label = document.createElement('div');
+        label.classList = 'position-absolute text-dark font-sub box-shadow-inset w-max-content w-max-80p white-space-nowrap overflow-hidden text-overflow-ellipsis px-5px';
+        label.style.backgroundColor = 'rgb(255, 255, 255)';
+        label.style.top = `-${height*15/100}px`;
+        label.style.left = '0px';
+        label.style.fontSize = `${height*25/100}px`;
+        label.style.lineHeight = `${height*30/100}px`;
+        label.style.height = `${height*30/100}px`;
+        label.innerText = text;
+        inputHolder.append(input,label);
+        main.append(inputHolder);
+        return main;
     }
 }
 const pages = {
@@ -1786,6 +2019,9 @@ const pages = {
                         const mondayResponseJson = await mondayResponse.json();
                         const items = mondayResponseJson.data.boards[0].groups[0].items;
                         // where column values is "verified"
+                        items.forEach(item=>{
+                            console.log(`${item.id} ${item.column_values[0].value}`);
+                        });
                         const verifiedItems = items.filter(item=>JSON.parse(item.column_values[0].value).index == globals.mondayFetch.statuses.borEffortBoard.verified);
                         const verifiedItemIds = verifiedItems.map(item=>item.id);
                         if(verifiedItemIds.length >0){
@@ -1841,7 +2077,7 @@ const pages = {
         main.replaceChildren(text, image, homeButton);
         controllers.popup({state:false});
     },
-    home: async()=>{
+    singleAccount: async()=>{
         controllers.secondaryGround();
         const accountData = await dataLoads.facebookAccountsWithDetails();
         const accountMultipleChoiceContent = popups.multipleChoice({
@@ -1937,20 +2173,82 @@ const pages = {
             main.append(item);
         }
         controllers.popup({state:false});
-    }
+    },
+    home: async()=>{
+        const main = document.getElementById('main');
+        main.classList = 'h-100vh w-100p d-flex flex-column justify-content-evenly align-items-center bg-dark';
+        const accountsLink = document.createElement('a');
+        accountsLink.href = '/account';
+        accountsLink.innerText = 'Accounts';
+        const loadItemsLink = document.createElement('a');
+        loadItemsLink.href = '/loadItems';
+        loadItemsLink.innerText = 'Load items';
+        const accountsControlLink = document.createElement('a');
+        accountsControlLink.href = '/accountControlLink';
+        accountsControlLink.innerText = 'Accounts control';
+        const itemsViewLink = document.createElement('a');
+        itemsViewLink.href = '/itemsView';
+        itemsViewLink.innerText = 'Items view';
+        main.replaceChildren(accountsLink, loadItemsLink, accountsControlLink, itemsViewLink);
+        controllers.popup({state:false});
+    },
+    accountControl: async()=>{
+        const main = document.getElementById('main');
+        main.classList = 'h-100vh w-100p overflow-x-auto d-flex bg-dark p-30px cursor-pointer';
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        main.addEventListener('mousedown', (e) => {
+            isDown = true;
+            main.classList.add('cursor-grabbing');
+            startX = e.pageX - main.offsetLeft;
+            scrollLeft = main.scrollLeft;
+        });
+        main.addEventListener('mouseleave', () => {
+            isDown = false;
+            main.classList.remove('cursor-grabbing');
+        });
+        main.addEventListener('mouseup', () => {
+            isDown = false;
+            main.classList.remove('cursor-grabbing');
+        });
+        main.addEventListener('mousemove', (e) => {
+            if(!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - main.offsetLeft;
+            const walk = (x - startX) * 1;
+            main.scrollLeft = scrollLeft - walk;
+        });
+
+
+        const accountControlData = await dataLoads.getAccountControls();
+        for(let i = 0; i < accountControlData.length; i++){
+            let hourlyLimitData = accountControlData[i].hourlyLimitData;
+            hourlyLimitData = JSON.parse(hourlyLimitData);
+            accountControlData[i].hourlyLimitData = hourlyLimitData;
+            const singleAccountControl = controllers.singleAccountControl(accountControlData[i]);
+            main.append(singleAccountControl);
+        }
+        controllers.popup({state:false});
+    },
 };
 
 const view = async()=>{
     const url = new URL(window.location.href);
     const path = url.pathname;
-    if(path=='/loadItems' || path=='/loadItems/'){
-        await pages.loadRawItem();        
-    }else if(path=='/' || path=='/account' || path=='/account/'){
+    if(path=='/'){
         await pages.home();
+    }else if(path=='/loadItems' || path=='/loadItems/'){
+        await pages.loadRawItem();        
+    }else if(path=='/account' || path=='/account/'){
+        await pages.singleAccount();
     }else if(path.match(/\/account\/\d+/)){
         await pages.account();
     }else if(path=='/itemsView' || path=='/itemsView/'){
         await pages.itemsView();
+    }else if(path=='/accountControlLink' || path=='/accountControlLink/'){
+        await pages.accountControl();
     }else{
         await pages.notFound();
     }
