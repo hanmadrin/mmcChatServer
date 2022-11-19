@@ -28,6 +28,23 @@ router.post('/unseenMessageIDs', async (req, res) => {
     }
     res.status(200).json(postIds);
 });
+// hasNewRawItem
+router.post('/hasNewRawItem', async (req, res) => {
+    const raw = await RawItem.findOne({
+        where: {
+            taken: false
+        },
+        attributes: ['item_id'],
+    });
+    if(raw){
+        res.json({
+            status: true,
+            item_id: raw.item_id
+        })
+    }else{
+        res.json({status:false})
+    }
+});
 router.post('/newPostId', async (req, res) => {
     if(req.fields.fb_id && req.fields.fb_user_name){
         const rawItem = await RawItem.findOne({
@@ -50,10 +67,38 @@ router.post('/newPostId', async (req, res) => {
                 fb_id: req.fields.fb_id,
                 fb_user_name: req.fields.fb_user_name,
             });
+            // const message = await Script.findOne({
+            //     where: {
+            //         code: 'initialMessage'
+            //     },
+            //     attributes: ['content'],
+            //     order: sequelize.random()
+            // });
+            // const timeStamp = parseInt(new Date().getTime());
+
+            // await Message.create({
+            //     item_id: rawItem.item_id,
+            //     message: req.fields.messageText?req.fields.messageText:initialMessageScript.content,
+            //     timestamp: `${timeStamp}`,
+            //     type: 'text',
+            //     sent_from: 'me',
+            //     fb_id: req.fields.fb_id,
+            //     status: 'done'
+            // });
+
+            // await Item.update({
+            //     last_auto_step: 'initialMessage',
+            //     last_auto_timestamp: `${timeStamp}`,
+            //     fb_post_id : req.fields.fb_post_id,
+            // },{
+            //     where: {
+            //         item_id: req.fields.item_id
+            //     }
+            // });
             // console.log(newItem);
             res.json(newItem);
         }else{
-            res.sendStatus(404);
+            res.json({});
         }
     }else{
         res.status(201).json({message: 'Extension is not providing fb Id or User name'});
@@ -73,6 +118,53 @@ router.post('/firstMessageText', async (req, res) => {
         order: sequelize.random()
     });
     res.json(message.content);
+});
+router.post('/initiateItemMessaging', async (req, res) => {
+    const item_id = req.fields.item_id;
+    const fb_id = req.fields.fb_id;
+    const fb_user_name = req.fields.fb_user_name;
+    const fb_post_id = req.fields.fb_post_id;
+    const timeStamp = parseInt(new Date().getTime());
+    const transaction = await sequelize.transaction();
+    if(item_id && fb_id && fb_user_name && fb_post_id){
+        const newItem = await Item.create({
+            item_id: item_id,
+            fb_id: fb_id,
+            fb_user_name: fb_user_name,
+            last_auto_step: 'initialMessage',
+            last_auto_timestamp: `${timeStamp}`,
+            fb_post_id : fb_post_id,
+        },transaction);
+        const firstMessage = await Script.findOne({
+            where: {
+                code: 'initialMessage'
+            },
+            attributes: ['content'],
+            order: sequelize.random(),
+            transaction: transaction
+        });
+        const message = await Message.create({
+            item_id: item_id,
+            message: firstMessage.content,
+            timestamp: `${timeStamp}`,
+            type: 'text',
+            sent_from: 'me',
+            fb_id: fb_id,
+            status: 'unsent'
+        },transaction);
+        res.json({
+            status: true,
+            item_id: item_id,
+            message: firstMessage.content,
+            id: message.id,
+            fb_post_id: fb_post_id
+        });
+        await transaction.commit();
+    }else{
+        await transaction.commit();
+        res.json({status: false,message:'noItem'});
+    }
+    
 });
 router.post('/saveFirstMessageAction', async (req, res) => {
     const message  = await Message.findOne({
@@ -195,18 +287,74 @@ router.post('/lastMessageOnServerByPostId', async (req, res) => {
 // hasRepliesToSend
 router.post('/hasRepliesToSend', async (req, res) => {
     const fb_id = req.fields.fb_id;
-    const unsentMessage = await Message.findAll({
-        limit: 1,
+    console.log(fb_id)
+    const transaction = await sequelize.transaction();
+    const unsentMessage = await Message.findOne({
         where: {
             fb_id: fb_id,
-            status: 'unsent'
+            status: 'unsent',
+            // mmc_user is not null
+            mmc_user: {
+                [Sequelize.Op.not]: null
+            },
         },
-        attributes: ['item_id'],
+        transaction: transaction
     });
-    if(unsentMessage.length > 0){
-        res.json({status: true, item_id: unsentMessage[0].item_id});
+    if(unsentMessage){
+        const item_id = unsentMessage.item_id;
+        const message = await Message.findOne({
+            where: {
+                item_id: item_id,
+                status: 'unsent',
+            },transaction
+        });
+        const item = await Item.findOne({
+            where: {
+                item_id: item_id
+            },transaction
+        });
+        res.json({
+            status: true,
+            item_id: item_id,
+            message: message.message,
+            id: message.id,
+            fb_post_id: item.fb_post_id
+        });
+        await transaction.commit();
     }else{
-        res.json({status: false});
+        await transaction.commit();
+        res.json({status: false,message:'noItem'});
+    }
+});
+router.post('/hasUnsentFirstMessage', async (req, res) => {
+    const fb_id = req.fields.fb_id;
+    // where first message unsent
+    const transaction = await sequelize.transaction();
+    const messageDB = await sequelize.query(`SELECT * FROM ( SELECT * FROM messages GROUP BY item_id HAVING COUNT(*) = 1 ) AS unique_item_id_group WHERE unique_item_id_group.fb_id='${fb_id}' AND unique_item_id_group.status='unsent' AND unique_item_id_group.mmc_user IS NULL LIMIT 1`,{transaction});
+    if(messageDB.length > 0){
+        const item_id = messageDB[0][0].item_id;
+        const message = messageDB[0][0].message;
+        const id = messageDB[0][0].id;
+        const item = await Item.findOne({
+            where: {
+                item_id: item_id,
+            },
+            attributes: ['fb_post_id'],
+            transaction,
+        });
+        const fb_post_id = item.fb_post_id;
+        
+        res.json({
+            status: true,
+            item_id: item_id,
+            message: message,
+            id: id,
+            fb_post_id: fb_post_id
+        });
+        await transaction.commit();
+    }else{
+        await transaction.commit();
+        res.json({status: false,message:'noItem'});
     }
 });
 // hasSecondMessageToSend
@@ -223,6 +371,7 @@ router.post('/hasSecondMessageToSend', async (req, res) => {
         res.json({status: false});
     }
 });
+
 router.get('/test', async (req, res) => {
     // const fb_id = req.params.fb_id;
     // const time = parseInt(new Date().getTime());
@@ -450,11 +599,12 @@ router.post('/markItemMessagesDone', async (req, res) => {
     res.json({});
 });
 router.post('/getAccountControlByDeviceId', async (req, res) => {
-    const account = await AccountControl.findOne({
+    const account = await Account.findOne({
         where: {
-            device_id: req.fields.device_id
+            deviceId: req.fields.deviceId
         }
     });
+    res.json(account);
 });
 router.post('/serverLinkGoneUpdate', async (req, res) => {
     const item_id = req.fields.item_id;
