@@ -894,6 +894,16 @@ const dataLoads = {
         const accountControlsData = await accountControls.json();
         return accountControlsData;
     },
+    getDashBoardData: async ()=>{
+        const dashBoardData = await fetch(`/api/getDashBoardData`,{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const dashBoardDataData = await dashBoardData.json();
+        return dashBoardDataData;
+    } 
 };
 const controllers = {
     ground: ()=>{
@@ -2177,19 +2187,21 @@ const pages = {
     home: async()=>{
         const main = document.getElementById('main');
         main.classList = 'h-100vh w-100p d-flex flex-column justify-content-evenly align-items-center bg-dark';
-        const accountsLink = document.createElement('a');
-        accountsLink.href = '/account';
-        accountsLink.innerText = 'Accounts';
-        const loadItemsLink = document.createElement('a');
-        loadItemsLink.href = '/loadItems';
-        loadItemsLink.innerText = 'Load items';
-        const accountsControlLink = document.createElement('a');
-        accountsControlLink.href = '/accountControlLink';
-        accountsControlLink.innerText = 'Accounts control';
-        const itemsViewLink = document.createElement('a');
-        itemsViewLink.href = '/itemsView';
-        itemsViewLink.innerText = 'Items view';
-        main.replaceChildren(accountsLink, loadItemsLink, accountsControlLink, itemsViewLink);
+        const linksData = {
+            account: 'FB Chat Interface',
+            loadItems: 'Add Verified items from Monday',
+            accountControlLink: 'Automation Account Control',
+            dashboard: 'Dashboard',
+            itemsView: 'Raw Items View',
+        }
+        main.replaceChildren();
+        for(const link in linksData){
+            const linkElement = document.createElement('a');
+            linkElement.href = '/' + link;
+            linkElement.classList = 'btn box-shadow-inset d-block p-20px border-radius-5px text-white link-decoration-none';
+            linkElement.innerText = linksData[link];
+            main.append(linkElement);
+        }
         controllers.popup({state:false});
     },
     accountControl: async()=>{
@@ -2232,6 +2244,49 @@ const pages = {
         }
         controllers.popup({state:false});
     },
+    dashBoard: async()=>{
+        const main = document.getElementById('main');
+        const dashBoardData = await dataLoads.getDashBoardData();
+        main.classList = 'w-100vw h-100vh d-flex flex-column align-items-center justify-content-center bg-dark';
+        const dataSet = {
+            'name':'Account Name',
+            'health': "Health",
+            'sellerReplies': 'Seller Replies',
+            'firstMessageInHour': 'First Message in Hour',
+            'repliesInHour': 'Replies in Hour',
+            'totalSentInHour': 'Total Sent in Hour',
+            'firstMessageInDay': 'First Message in Day',
+            'repliesInday': 'Replies in Day',
+            'totalSentInDay': 'Total Sent in Day',
+            'quedFirstMessage': 'Qued First Message',
+            'quedReplies': 'Qued Replies',
+        }
+        const dataSetKeys = Object.keys(dataSet);
+        const table = document.createElement('table');
+        const tableHeader = document.createElement('tr');
+        for(let i=0; i < dataSetKeys.length; i++){
+            const key = dataSetKeys[i];
+            const td = document.createElement('td');
+            td.innerText = dataSet[key];
+            td.classList = 'text-white box-shadow-inset p-10px';
+            tableHeader.append(td);
+        }
+        table.append(tableHeader);
+        for(let i = 0; i < dashBoardData.length; i++){
+            const singleUser = dashBoardData[i];
+            const tr = document.createElement('tr');
+            for(let i=0; i < dataSetKeys.length; i++){
+                const key = dataSetKeys[i];
+                const td = document.createElement('td');
+                td.innerText = singleUser[key];
+                td.classList = 'text-white box-shadow-inset p-10px';
+                tr.append(td);
+            }
+            table.append(tr);
+        }
+        main.append(table);
+        controllers.popup({state:false});
+    },
 };
 
 const view = async()=>{
@@ -2249,6 +2304,8 @@ const view = async()=>{
         await pages.itemsView();
     }else if(path=='/accountControlLink' || path=='/accountControlLink/'){
         await pages.accountControl();
+    }else if(path=='/dashboard' || path=='/dashboard/'){
+        await pages.dashBoard();
     }else{
         await pages.notFound();
     }

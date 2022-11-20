@@ -572,8 +572,10 @@ router.post('/getUnsentMessagesByPostId', async (req, res) => {
 });
 router.post('/markMessageAsSent', async (req, res) => {
     const message_id = req.fields.message_id;
+    const timestamp = parseInt(new Date().getTime());
     await Message.update({
-        status: 'done'
+        status: 'done',
+        timestamp: `${timestamp}`
     },{
         where: {
             id: message_id

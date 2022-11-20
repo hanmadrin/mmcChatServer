@@ -383,6 +383,112 @@ router.post('/updateAccountControls', async (req, res) => {
     });
     res.json({});
 });
+// getDashBoardData
+router.post('/getDashBoardData', async (req, res) => {
+    // geet distinct fb_id from item
+    const items = await Item.findAll({
+        attributes: [
+            [sequelize.fn('DISTINCT', sequelize.col('fb_id')), 'fb_id'],
+            'fb_user_name'
+        ]
+    });
+    const data = [];
+    for(let i = 0; i < items.length; i++){
+        let temp= {};
+        temp.name = items[i].fb_user_name;
+        temp.health = '';
+        temp.sellerReplies = await Item.count({
+            where: {
+                fb_id: items[i].fb_id,
+                has_unread_message: 1
+            }
+        });
+        temp.firstMessageInHour = await Message.count({
+            where: {
+                fb_id: items[i].fb_id,
+                status: 'done',
+                mmc_user: null,
+                timestamp: {
+                    [Sequelize.Op.gt]: new Date().getTime() - 3600000
+                }
+            }
+        });
+        
+        temp.firstMessageInDay = await Message.count({
+            where: {
+                fb_id: items[i].fb_id,
+                status: 'done',
+                mmc_user: null,
+                timestamp: {
+                    [Sequelize.Op.gt]: new Date().getTime() - (3600000*24)
+                } 
+            }
+        });
+        temp.repliesInHour = await Message.count({
+            where: {
+                fb_id: items[i].fb_id,
+                status: 'done',
+                mmc_user: {
+                    [Sequelize.Op.not]: null
+                },
+                timestamp: {
+                    [Sequelize.Op.gt]: new Date().getTime() - 3600000
+                }
+            }
+        });
+        temp.repliesInday = await Message.count({
+            where: {
+                fb_id: items[i].fb_id,
+                status: 'done',
+                mmc_user: {
+                    [Sequelize.Op.not]: null
+                },
+                timestamp: {
+                    [Sequelize.Op.gt]: new Date().getTime() - (3600000*24)
+                }
+            }
+        });
+        temp.totalSentInHour = await Message.count({
+            where: {
+                fb_id: items[i].fb_id,
+                status: 'done',
+                timestamp: {
+                    [Sequelize.Op.gt]: new Date().getTime() - (3600000)
+                } 
+            }
+        });
+        temp.totalSentInDay = await Message.count({
+            where: {
+                fb_id: items[i].fb_id,
+                status: 'done',
+                timestamp: {
+                    [Sequelize.Op.gt]: new Date().getTime() - (3600000*24)
+                } 
+            }
+        });
+        temp.quedFirstMessage = await Message.count({
+            where: {
+                fb_id: items[i].fb_id,
+                status: 'unsent',
+                mmc_user: null
+            }
+        });
+        temp.quedReplies = await Message.count({
+            where: {
+                fb_id: items[i].fb_id,
+                status: 'unsent',
+                mmc_user: {
+                    [Sequelize.Op.not]: null
+                }
+            }
+        });
+        data.push(temp);
+    }
+    
+
+    // console.log(items.length);
+    res.json(data);
+});
 router.get('/socket', (req, res) => {
     webSocket.sockets.emit('chat', {handle: 'yuiyi', message: 'Welcome to the chat app'});
     res.sendStatus(200);
