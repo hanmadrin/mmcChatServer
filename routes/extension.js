@@ -626,6 +626,7 @@ router.post('/getAccountControlByDeviceId', async (req, res) => {
 });
 router.post('/serverLinkGoneUpdate', async (req, res) => {
     const item_id = req.fields.item_id;
+    const fb_id = req.fields.fb_id;
     // await Item.update({
     //     last_auto_step: 'linkGone',
     // },{
