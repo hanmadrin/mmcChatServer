@@ -392,10 +392,18 @@ router.post('/itemIdByPostId', async (req, res) => {
         },
         attributes: ['item_id']
     });
+    const archiveItem = await ArchiveItem.findOne({
+        where: {
+            fb_post_id: fb_post_id
+        },
+        attributes: ['item_id']
+    });
     if(item){
-        res.json(item);
+        res.json({status: true,item_id: item.item_id});
+    }else if(archiveItem){
+        res.json({status: true,item_id: archiveItem.item_id});
     }else{
-        res.sendStatus(404);
+        res.json({status: false});
     }
 });
 // postIdByItemId
@@ -407,10 +415,18 @@ router.post('/postIdByItemId', async (req, res) => {
         },
         attributes: ['fb_post_id']
     });
+    const archiveItem = await ArchiveItem.findOne({
+        where: {
+            item_id: item_id
+        },
+        attributes: ['fb_post_id']
+    });
     if(item){
-        res.json(item);
+        res.json({status: true,fb_post_id: item.fb_post_id});
+    }else if(archiveItem){
+        res.json({status: true,fb_post_id: archiveItem.fb_post_id});
     }else{
-        res.sendStatus(404);
+        res.json({status: false});
     }
 });
 // setSecondMessage
