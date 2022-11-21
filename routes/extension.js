@@ -330,8 +330,9 @@ router.post('/hasUnsentFirstMessage', async (req, res) => {
     const fb_id = req.fields.fb_id;
     // where first message unsent
     const transaction = await sequelize.transaction();
-    const messageDB = await sequelize.query(`SELECT * FROM ( SELECT * FROM messages GROUP BY item_id HAVING COUNT(*) = 1 ) AS unique_item_id_group WHERE unique_item_id_group.fb_id='${fb_id}' AND unique_item_id_group.status='unsent' AND unique_item_id_group.mmc_user IS NULL LIMIT 1`,{transaction});
-    if(messageDB.length > 0){
+    const messageDB = await sequelize.query(`SELECT * FROM ( SELECT * FROM messages GROUP BY item_id HAVING COUNT(*) = 1 ) AS unique_item_id_group WHERE unique_item_id_group.fb_id='${fb_id}' AND unique_item_id_group.status='unsent' AND unique_item_id_group.mmc_user IS NULL LIMIT 1`);
+    if(messageDB[0].length > 0){
+        console.log(messageDB[0][0]);
         const item_id = messageDB[0][0].item_id;
         const message = messageDB[0][0].message;
         const id = messageDB[0][0].id;
@@ -343,7 +344,7 @@ router.post('/hasUnsentFirstMessage', async (req, res) => {
             transaction,
         });
         const fb_post_id = item.fb_post_id;
-        
+        await transaction.commit();
         res.json({
             status: true,
             item_id: item_id,
@@ -351,7 +352,7 @@ router.post('/hasUnsentFirstMessage', async (req, res) => {
             id: id,
             fb_post_id: fb_post_id
         });
-        await transaction.commit();
+        
     }else{
         await transaction.commit();
         res.json({status: false,message:'noItem'});

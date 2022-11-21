@@ -393,6 +393,9 @@ router.post('/getDashBoardData', async (req, res) => {
         ]
     });
     const data = [];
+    // const startingTimeOfToday = new Date();
+    // startingTimeOfToday.setHours(0,0,0,0);
+    // startingTimeOfToday
     for(let i = 0; i < items.length; i++){
         let temp= {};
         temp.name = items[i].fb_user_name;
