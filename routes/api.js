@@ -418,8 +418,8 @@ router.post('/getDashBoardData', async (req, res) => {
         temp.firstMessageInDay = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NULL AND status = 'done' AND timestamp > '${new Date().getTime() - (3600*1000*24)}'`);
         temp.firstMessageInDay = temp.firstMessageInDay[0][0].id;
         // AND timestamp > '${new Date().getTime() - (3600*1000*24)}'`
-        temp.health = await sequelize.query(`SELECT id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NULL AND status = 'done' AND timestamp > '${new Date().getTime() - (3600*1000*24)}'`);
-        temp.health = JSON.stringify(temp.health[0].map((item) => item.id));
+        // temp.health = await sequelize.query(`SELECT id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NULL AND status = 'done' AND timestamp > '${new Date().getTime() - (3600*1000*24)}'`);
+        // temp.health = JSON.stringify(temp.health[0].map((item) => item.id));
 
         temp.firstMessageInHour = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NULL AND status = 'done' AND timestamp > '${new Date().getTime() - (3600*1000)}'`);
         temp.firstMessageInHour = temp.firstMessageInHour[0][0].id;
