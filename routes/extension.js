@@ -147,7 +147,6 @@ router.post('/initiateItemMessaging', async (req, res) => {
             item_id: item_id,
             sent_from: 'me',
             message: `${messageContent}`,
-            
             timestamp: `${timeStamp}`,
             type: 'text',
             fb_id: fb_id,
