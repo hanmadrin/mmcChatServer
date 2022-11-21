@@ -37,6 +37,9 @@ router.post('/hasNewRawItem', async (req, res) => {
         attributes: ['item_id'],
     });
     if(raw){
+        await RawItem.update({
+            taken: true
+        },{where: {item_id: raw.item_id}});
         res.json({
             status: true,
             item_id: raw.item_id
