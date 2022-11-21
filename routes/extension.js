@@ -152,6 +152,7 @@ router.post('/initiateItemMessaging', async (req, res) => {
             fb_id: fb_id,
             status: 'unsent'
         },transaction);
+        await transaction.commit();
         res.json({
             status: true,
             item_id: item_id,
@@ -159,7 +160,7 @@ router.post('/initiateItemMessaging', async (req, res) => {
             id: message.id,
             fb_post_id: fb_post_id
         });
-        await transaction.commit();
+        
     }else{
         await transaction.commit();
         res.json({status: false,message:'noItem'});
@@ -313,6 +314,7 @@ router.post('/hasRepliesToSend', async (req, res) => {
                 item_id: item_id
             },transaction
         });
+        await transaction.commit();
         res.json({
             status: true,
             item_id: item_id,
@@ -320,7 +322,7 @@ router.post('/hasRepliesToSend', async (req, res) => {
             id: message.id,
             fb_post_id: item.fb_post_id
         });
-        await transaction.commit();
+        
     }else{
         await transaction.commit();
         res.json({status: false,message:'noItem'});
