@@ -403,85 +403,110 @@ router.post('/getDashBoardData', async (req, res) => {
                 has_unread_message: 1
             }
         });
-        temp.firstMessageInHour = await Message.count({
-            where: {
-                fb_id: items[i].fb_id,
-                status: 'done',
-                mmc_user: null,
-                timestamp: {
-                    [Sequelize.Op.gt]: new Date().getTime() - 3600000
-                }
-            }
-        });
+        // temp.firstMessageInHour = await Message.count({
+        //     where: {
+        //         fb_id: items[i].fb_id,
+        //         status: 'done',
+        //         sent_from: 'me',
+        //         mmc_user: null,
+        //         timestamp: {
+        //             [Sequelize.Op.gt]: new Date().getTime() - 3600000
+        //         }
+        //     }
+        // });
         
-        temp.firstMessageInDay = await Message.count({
-            where: {
-                fb_id: items[i].fb_id,
-                status: 'done',
-                mmc_user: null,
-                timestamp: {
-                    [Sequelize.Op.gt]: new Date().getTime() - (3600000*24)
-                } 
-            }
-        });
-        temp.repliesInHour = await Message.count({
-            where: {
-                fb_id: items[i].fb_id,
-                status: 'done',
-                mmc_user: {
-                    [Sequelize.Op.not]: null
-                },
-                timestamp: {
-                    [Sequelize.Op.gt]: new Date().getTime() - 3600000
-                }
-            }
-        });
-        temp.repliesInday = await Message.count({
-            where: {
-                fb_id: items[i].fb_id,
-                status: 'done',
-                mmc_user: {
-                    [Sequelize.Op.not]: null
-                },
-                timestamp: {
-                    [Sequelize.Op.gt]: new Date().getTime() - (3600000*24)
-                }
-            }
-        });
-        temp.totalSentInHour = await Message.count({
-            where: {
-                fb_id: items[i].fb_id,
-                status: 'done',
-                timestamp: {
-                    [Sequelize.Op.gt]: new Date().getTime() - (3600000)
-                } 
-            }
-        });
-        temp.totalSentInDay = await Message.count({
-            where: {
-                fb_id: items[i].fb_id,
-                status: 'done',
-                timestamp: {
-                    [Sequelize.Op.gt]: new Date().getTime() - (3600000*24)
-                } 
-            }
-        });
-        temp.quedFirstMessage = await Message.count({
-            where: {
-                fb_id: items[i].fb_id,
-                status: 'unsent',
-                mmc_user: null
-            }
-        });
-        temp.quedReplies = await Message.count({
-            where: {
-                fb_id: items[i].fb_id,
-                status: 'unsent',
-                mmc_user: {
-                    [Sequelize.Op.not]: null
-                }
-            }
-        });
+        temp.firstMessageInDay = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NULL AND status = 'done' AND timestamp > '${new Date().getTime() - (3600*1000*24)}'`);
+        temp.firstMessageInDay = temp.firstMessageInDay[0][0].id;
+        // AND timestamp > '${new Date().getTime() - (3600*1000*24)}'`
+        temp.health = await sequelize.query(`SELECT id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NULL AND status = 'done' AND timestamp > '${new Date().getTime() - (3600*1000*24)}'`);
+        temp.health = JSON.stringify(temp.health[0].map((item) => item.id));
+
+        temp.firstMessageInHour = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NULL AND status = 'done' AND timestamp > '${new Date().getTime() - (3600*1000)}'`);
+        temp.firstMessageInHour = temp.firstMessageInHour[0][0].id;
+
+        temp.repliesInday = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NOT NULL AND status = 'done' AND timestamp > '${new Date().getTime() - (3600*1000*24)}'`);
+        temp.repliesInday = temp.repliesInday[0][0].id;
+
+        temp.repliesInHour = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NOT NULL AND status = 'done' AND timestamp > '${new Date().getTime() - (3600*1000)}'`);
+        temp.repliesInHour = temp.repliesInHour[0][0].id;
+
+        temp.totalSentInDay = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND status = 'done' AND timestamp > '${new Date().getTime() - (3600*1000*24)}'`);
+        temp.totalSentInDay = temp.totalSentInDay[0][0].id;
+
+        temp.totalSentInHour = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND status = 'done' AND timestamp > '${new Date().getTime() - (3600*1000)}'`);
+        temp.totalSentInHour = temp.totalSentInHour[0][0].id;
+
+        temp.quedFirstMessage = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NULL AND status = 'unsent'`);
+        temp.quedFirstMessage = temp.quedFirstMessage[0][0].id;
+
+        temp.quedReplies = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NOT NULL AND status = 'unsent'`);
+        temp.quedReplies = temp.quedReplies[0][0].id;
+
+        // temp.repliesInHour = await Message.count({
+        //     where: {
+        //         fb_id: items[i].fb_id,
+        //         status: 'done',
+        //         sent_from: 'me',
+        //         mmc_user: {
+        //             [Sequelize.Op.not]: null
+        //         },
+        //         timestamp: {
+        //             [Sequelize.Op.gt]: new Date().getTime() - 3600000
+        //         }
+        //     }
+        // });
+        // temp.repliesInday = await Message.count({
+        //     where: {
+        //         fb_id: items[i].fb_id,
+        //         status: 'done',
+        //         sent_from: 'me',
+        //         mmc_user: {
+        //             [Sequelize.Op.not]: null
+        //         },
+        //         timestamp: {
+        //             [Sequelize.Op.gt]: new Date().getTime() - (3600000*24)
+        //         }
+        //     }
+        // });
+
+        // temp.totalSentInHour = await Message.count({
+        //     where: {
+        //         fb_id: items[i].fb_id,
+        //         status: 'done',
+        //         sent_from: 'me',
+        //         timestamp: {
+        //             [Sequelize.Op.gt]: new Date().getTime() - (3600000)
+        //         } 
+        //     }
+        // });
+        // temp.totalSentInDay = await Message.count({
+        //     where: {
+        //         fb_id: items[i].fb_id,
+        //         status: 'done',
+        //         sent_from: 'me',
+        //         timestamp: {
+        //             [Sequelize.Op.gt]: new Date().getTime() - (3600000*24)
+        //         } 
+        //     }
+        // });
+        // temp.quedFirstMessage = await Message.count({
+        //     where: {
+        //         fb_id: items[i].fb_id,
+        //         status: 'unsent',
+        //         sent_from: 'me',
+        //         mmc_user: null
+        //     }
+        // });
+        // temp.quedReplies = await Message.count({
+        //     where: {
+        //         fb_id: items[i].fb_id,
+        //         status: 'unsent',
+        //         sent_from: 'me',
+        //         mmc_user: {
+        //             [Sequelize.Op.not]: null
+        //         }
+        //     }
+        // });
         data.push(temp);
     }
     
