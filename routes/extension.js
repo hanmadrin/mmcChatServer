@@ -266,10 +266,32 @@ router.post('/lastMessageOnServerByPostId', async (req, res) => {
         },
         attributes: ['item_id']
     });
+    const archiveItem = await ArchiveItem.findOne({
+        where: {
+            fb_post_id: fb_post_id
+        },
+        attributes: ['item_id']
+    });    
     if(item){
         const message = await Message.findOne({
             where: {
                 item_id: item.item_id,
+                status: 'done'
+            },
+            attributes: ['message'],
+            order: [
+                ['id', 'DESC']
+            ]
+        });
+        if(message){
+            res.json(message);
+        }else{
+            res.sendStatus(404);
+        }
+    }else if(archiveItem){
+        const message = await ArchiveMessage.findOne({
+            where: {
+                item_id: archiveItem.item_id,
                 status: 'done'
             },
             attributes: ['message'],
