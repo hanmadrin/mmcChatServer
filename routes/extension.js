@@ -235,7 +235,7 @@ router.post('/isValidMessageId', async (req, res) => {
         }
     });
     if(archiveItem){
-        await item.update({
+        await ArchiveItem.update({
             fb_message_id: fb_message_id
         },{
             where: {
@@ -244,7 +244,7 @@ router.post('/isValidMessageId', async (req, res) => {
         });
     }
     if(item){
-        await item.update({
+        await Item.update({
             fb_message_id: fb_message_id
         },{
             where: {
