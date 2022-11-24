@@ -398,14 +398,16 @@ router.post('/getDashBoardData', async (req, res) => {
     // startingTimeOfToday
     for(let i = 0; i < items.length; i++){
         let temp= {};
+        temp.fb_id = items[i].fb_id;
         temp.name = items[i].fb_user_name;
         temp.health = '';
-        temp.sellerReplies = await Item.count({
+        temp.sellerReplies = (await Item.findAll({
             where: {
                 fb_id: items[i].fb_id,
                 has_unread_message: 1
-            }
-        });
+            },
+            attributes: ['item_id']
+        })).map(item => item.item_id);
         // temp.firstMessageInHour = await Message.count({
         //     where: {
         //         fb_id: items[i].fb_id,

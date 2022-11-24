@@ -903,7 +903,21 @@ const dataLoads = {
         });
         const dashBoardDataData = await dashBoardData.json();
         return dashBoardDataData;
-    } 
+    },
+    getActiveItemIdsOnMonday: async (allIds)=>{
+        const query = `
+            query{
+                boards(ids:[${globals.mondayFetch.borEffortBoardId}]){
+                    items(limit:1000,ids:[${allIds.map(id=>`${id}`)}]){
+                        id
+                    }
+                }
+            }
+        `;
+        const mondayItemsDataJson = await functions.mondayFetch(query);
+        const mondayItemsdata = await mondayItemsDataJson.json();
+        return mondayItemsdata.data.boards[0].items.map(item=>item.id);
+    },
 };
 const controllers = {
     ground: ()=>{
@@ -2246,7 +2260,40 @@ const pages = {
     },
     dashBoard: async()=>{
         const main = document.getElementById('main');
-        const dashBoardData = await dataLoads.getDashBoardData();
+        let dashBoardData = await dataLoads.getDashBoardData();
+        const sellerRepliesCorrectionOnDashBoard = async(dashBoardData)=>{
+            const fb_ids = dashBoardData.map((item)=>item.fb_id);
+            const sellerRepliedItemId = {};
+            for(let i = 0; i < dashBoardData.length; i++){
+                const item = dashBoardData[i];
+                const fb_id = item.fb_id;
+                sellerRepliedItemId[fb_id] = item.sellerReplies;
+                item.sellerReplies = 0;
+            }
+            const sellerRepliedItemIds = [];
+            for(const fb_id in sellerRepliedItemId){
+                sellerRepliedItemIds.push(...sellerRepliedItemId[fb_id]);
+            }
+            const activeSellerRepliedItemIds = await dataLoads.getActiveItemIdsOnMonday(sellerRepliedItemIds);
+            for(let i=0; i< dashBoardData.length; i++){
+                const item = dashBoardData[i];
+                const fb_id = item.fb_id;
+                const sellerReplies = sellerRepliedItemId[fb_id];
+                for(let j = 0; j < sellerReplies.length; j++){
+                    const sellerReply = sellerReplies[j];
+                    if(activeSellerRepliedItemIds.includes(sellerReply)){
+                        item.sellerReplies++;
+                    }
+                }
+            }
+            // console.log(activeSellerRepliedItemIds);
+            // console.log(sellerRepliedItemId);
+            // console.log(sellerRepliedItemIds);
+            return dashBoardData;
+        };
+        dashBoardData = await sellerRepliesCorrectionOnDashBoard(dashBoardData);
+
+
         main.classList = 'w-100vw h-100vh d-flex flex-column align-items-center justify-content-center bg-dark';
         const dataSet = {
             'name':'Account Name',
@@ -2272,11 +2319,13 @@ const pages = {
             tableHeader.append(td);
         }
         table.append(tableHeader);
+
         for(let i = 0; i < dashBoardData.length; i++){
             const singleUser = dashBoardData[i];
             const tr = document.createElement('tr');
             for(let i=0; i < dataSetKeys.length; i++){
                 const key = dataSetKeys[i];
+                
                 const td = document.createElement('td');
                 td.innerText = singleUser[key];
                 td.classList = 'text-white box-shadow-inset p-10px';
