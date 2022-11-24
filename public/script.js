@@ -373,12 +373,12 @@ const popups = {
                     itemButton.classList = 'btn cursor-pointer border-radius-5px text-white bg-primary font-normal border-0 p-10px m-5px w-200px position-relative white-space-nowrap overflow-hidden text-overflow-ellipsis';
                     itemButton.innerText = `(${items[j].total}) ${items[j].fb_user_name}`;
                     itemButton.setAttribute('data-fb_id', items[j].fb_id);
-                    if(items[j].unseen>0){
-                        const unseenDiv = document.createElement('div');
-                        unseenDiv.classList = 'bg-danger border-round position-absolute top-0 right-0 font-normal text-white w-20px h-20px d-flex justify-content-center align-items-center';
-                        unseenDiv.innerText = items[j].unseen;
-                        itemButton.append(unseenDiv);
-                    }
+                    // if(items[j].unseen>0){
+                    //     const unseenDiv = document.createElement('div');
+                    //     unseenDiv.classList = 'bg-danger border-round position-absolute top-0 right-0 font-normal text-white w-20px h-20px d-flex justify-content-center align-items-center';
+                    //     unseenDiv.innerText = items[j].unseen;
+                    //     itemButton.append(unseenDiv);
+                    // }
                     itemButton.onclick = callback;
                     columnHolder.append(itemButton);
                 }
