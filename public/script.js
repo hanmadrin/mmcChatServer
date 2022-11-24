@@ -2017,7 +2017,7 @@ const components = {
         main.append(sliderText,slideSwitchLabel);
         return main;
     },
-    inputWithText: ({height=60,value='',text='Input Label',type='text',name})=>{
+    inputWithText: ({height=60,value='',text='Input Label',type='text',name,maxNum=10})=>{
         const main = document.createElement('div');
         main.classList = 'w-100p d-flex flex-column justify-content-end box-shadow-inset';
         main.style.height = `${height}px`;
@@ -2042,6 +2042,9 @@ const components = {
                     }
                 }
                 input.value =  numbers.join('')*1;
+                if(text*1>maxNum){
+                    input.value = maxNum;
+                }
             }
             input.oninput = changeIntoNumbers;
             input.onchange = changeIntoNumbers;
@@ -2393,7 +2396,14 @@ const pages = {
                 const key = dataSetKeys[i];
                 
                 const td = document.createElement('td');
-                td.innerText = singleUser[key];
+                if(key=='sellerReplies'){
+                    const a = document.createElement('a');
+                    a.href = `/account/${singleUser.fb_id}/?filterMessage=new`;
+                    a.innerText = singleUser[key];
+                    td.append(a);
+                }else{
+                    td.innerText = singleUser[key];
+                }
                 td.classList = 'text-white box-shadow-inset p-10px';
                 tr.append(td);
             }
