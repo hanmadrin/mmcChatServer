@@ -991,8 +991,12 @@ const controllers = {
             });
             allMessageSection.replaceChildren(noMessage, selectOtherAccount);
         }else{
+            const filterMessageValue = new URL(window.location.href).searchParams.get('filterMessage')||'all';
+            // console.log(`filterMessage`, filterMessage);
             const header = document.createElement('div');
-            header.classList = 'p-10px position-sticky top-0 bg-dark box-shadow-inset-bottom d-flex justify-content-between align-items-center zindex-2';
+            header.classList = 'p-10px position-sticky top-0 bg-dark box-shadow-inset-bottom  zindex-2';
+            const headerTop = document.createElement('div');
+            headerTop.classList = 'd-flex justify-content-between align-items-center';
             const headerSelect = document.createElement('button');
             headerSelect.classList = 'btn cursor-pointer border-radius-5px w-100p text-white bg-primary font-normal border-0 p-10px my-5px position-relative white-space-nowrap overflow-hidden text-overflow-ellipsis';
             headerSelect.innerText = messageData.fb_user_name;
@@ -1035,7 +1039,31 @@ const controllers = {
                 await view();
                 controllers.popup({state: false,});
             });
-            header.replaceChildren(headerSelect, headerReload);
+            headerTop.replaceChildren(headerSelect, headerReload);
+            const headerBottom = document.createElement('div');
+            headerBottom.classList = 'd-flex justify-content-between align-items-center';
+            const filterMessageSelect = document.createElement('select');
+            filterMessageSelect.classList = 'btn text-white box-shadow-inset bg-dark border-0 ml-5px w-100p h-30px font-header';   
+            const filterMessageOptions = [
+                {value: 'all', text: "All Messages"},
+                {value: "new", text: "New Messages"},
+                {value: "unanswered", text: "Unasnwered Messages"},
+                {value: "answered", text: "Answered Messages"},
+            ];
+            filterMessageOptions.forEach((option)=>{
+                const optionElement = document.createElement('option');
+                optionElement.value = option.value;
+                optionElement.text = option.text;
+                if(option.value == filterMessageValue){
+                    optionElement.selected = true;
+                }
+                filterMessageSelect.appendChild(optionElement);
+            });
+            filterMessageSelect.addEventListener('change', ()=>{
+                controllers.messageFilterChanged(filterMessageSelect.value);
+            });
+            headerBottom.replaceChildren(filterMessageSelect);
+            header.replaceChildren(headerTop, headerBottom);
 
             const body = document.createElement('div');
             body.classList = 'h-100p overflow-y-scroll box-shadow-inset-top';
@@ -1065,6 +1093,27 @@ const controllers = {
                     
                     itemBox.classList = 'py-15px cursor-pointer font-normal my-5px px-5px position-relative single_message_item_archive_feature_parent';
                     itemBox.setAttribute('data-last_message', item.has_unread_message?'new':item.last_message);
+                    // filtering
+                    itemBox.setAttribute('data-filter', 'messageFilter');
+                    itemBox.setAttribute('data-visibility', 'show');
+                    if(filterMessageValue == 'new'){
+                        const lastMessage = itemBox.getAttribute('data-last_message');
+                        if(lastMessage != 'new'){
+                            itemBox.setAttribute('data-visibility', 'hide');
+                        }
+                    }else if(filterMessageValue == 'unanswered'){
+                        const lastMessage = itemBox.getAttribute('data-last_message');
+                        if(lastMessage != 'seller'){
+                            itemBox.setAttribute('data-visibility', 'hide');
+                        }
+                    }else if(filterMessageValue == 'answered'){
+                        const lastMessage = itemBox.getAttribute('data-last_message');
+                        if(lastMessage != 'me'){
+                            itemBox.setAttribute('data-visibility', 'hide');
+                        }
+                    }
+
+                    // filtering
                     if(item.item_id==new URL(window.location.href).searchParams.get('item_id')){
                         itemBox.setAttribute('data-selected', 'yes');
                     }
@@ -1098,6 +1147,33 @@ const controllers = {
             }
             allMessageSection.replaceChildren(header, body);
         }
+    },
+    messageFilterChanged: (value)=>{
+        // update url
+        const url = new URL(window.location.href);
+        url.searchParams.set('filterMessage', value);
+        window.history.pushState({},"", url);
+        const messageFilterItems = document.querySelectorAll('[data-filter="messageFilter"]');
+        for(const item of messageFilterItems){
+            item.setAttribute('data-visibility', 'show');
+            if(value == 'new'){
+                const lastMessage = item.getAttribute('data-last_message');
+                if(lastMessage != 'new'){
+                    item.setAttribute('data-visibility', 'hide');
+                }
+            }else if(value == 'unanswered'){
+                const lastMessage = item.getAttribute('data-last_message');
+                if(lastMessage != 'seller'){
+                    item.setAttribute('data-visibility', 'hide');
+                }
+            }else if(value == 'answered'){
+                const lastMessage = item.getAttribute('data-last_message');
+                if(lastMessage != 'me'){
+                    item.setAttribute('data-visibility', 'hide');
+                }
+            }
+        }
+
     },
     notifyLastMessageFromMe: (data)=>{
         const allMessageSection = document.getElementById('allMessageSection');
@@ -2128,24 +2204,14 @@ const pages = {
             const allMessageData = await dataLoads.accountMessages();
             controllers.allMessage(allMessageData);
             const item_id = url.searchParams.get('item_id');
-            // if(item_id){
-                const singleMessageData = await dataLoads.singleItemMessage({force:false});
-                controllers.singleItemMessage(singleMessageData);
-                const messageScriptData = await dataLoads.messageScript();
-                controllers.messageScript(messageScriptData);
-                const mondayItemdata = await dataLoads.mondayItem();
-                controllers.mondayItem({itemData:mondayItemdata,choice:'columns'});
-            // }else{
-            //     controllers.popup({state:false});
-            // }
 
-            
-            // const mondayItemdata = await dataLoads.mondayItem();
-            // console.log(allMessageData);
-            // console.log(singleMessageData);
-            // console.log(messageScriptData);
-            // console.log(mondayItemdata);
-            // await controllers.
+            const singleMessageData = await dataLoads.singleItemMessage({force:false});
+            controllers.singleItemMessage(singleMessageData);
+            const messageScriptData = await dataLoads.messageScript();
+            controllers.messageScript(messageScriptData);
+            const mondayItemdata = await dataLoads.mondayItem();
+            controllers.mondayItem({itemData:mondayItemdata,choice:'columns'});
+
             
         }else{
             controllers.popup({
