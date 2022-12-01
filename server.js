@@ -15,6 +15,7 @@ app.use(cookieParser());
 app.use(formidable());
 app.use('/api', require('./routes/api'));
 app.use('/extension', require('./routes/extension'));
+app.use('/vauto', require('./routes/vauto'));
 app.use('/socket', require('./routes/socket'));
 app.use('/public',express.static('./public'));
 app.use('/', (req, res) => {res.sendFile('./public/index.html', {root: __dirname});});
