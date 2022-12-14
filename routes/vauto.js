@@ -5,7 +5,9 @@ const {webSocket} = require('../setup');
 const Sequelize = require('sequelize');
 const sequelize = require('../configs/database');
 const AppraisalItem = require('../models/AppraisalItem');
-
+const Item = require('../models/Item');
+const Script = require('../models/Script');
+const Message = require('../models/Message');
 const getCurrentTime = ()=>{
     return new Date().getTime();
 };
@@ -112,5 +114,105 @@ router.post('/uploadNewItems', async (req, res) => {
     res.json({
         action: 'tryLaterAgain'
     });
+});
+
+router.post('/isItemActiveOnChat', async (req, res) => {
+    const item_id = req.query.item_id || req.fields.item_id;
+    if(item_id){
+        const item = await Item.findOne({
+            where: {
+                item_id: item_id
+            }
+        });
+        if(item){
+            res.json({
+                status: true,
+                item: item,
+            });
+        }else{
+            res.json({
+                status: false,
+                message: 'Item not found'
+            });
+        }
+    }else{
+        res.json({
+            status: false,
+            message: 'Item id is required'
+        });
+    }
+});
+router.post('/setAutomatedOfferMessage', async (req, res) => {
+    const item_id = req.query.item_id || req.fields.item_id;
+    const messageCode = req.query.messageCode || req.fields.messageCode;
+    const variables = req.query.variables || req.fields.variables;
+    console.log(item_id, messageCode, variables);
+    const script = await Script.findOne({
+        where:{
+            code: messageCode
+        }
+    });
+    if(script){
+        const rawMessage = script.content;
+        let message = rawMessage;
+        if(variables){
+            const keys = Object.keys(variables);
+            for(let i = 0; i < keys.length; i++){
+                const key = keys[i];
+                message = message.replace(`${key}`, variables[key]);
+            }
+        }
+        // [[key]] ANY MATCH?
+        if(message.match(/\[\[.*?\]\]/g)){
+            res.json({
+                status: false,
+                message: 'not enough variables provided'
+            });
+        }else{
+            const item = await Item.findOne({
+                item_id: item_id
+            });
+            if(item){
+                const messageQue = await Message.findOne({
+                    where: {
+                        item_id: item_id,
+                        mmc_user: 'vauto_program'
+                    }
+                });
+                if(messageQue){
+                    res.json({
+                        status: false,
+                        message: 'Automated Message already sent'
+                    });
+                }else{
+                    await Message.create({
+                        item_id: item_id,
+                        sent_from: 'me',
+                        message: message,
+                        fb_id: item.fb_id,
+                        mmc_user: 'vauto_program',
+                        type: 'text',
+                        status: 'unsent',
+                        timestamp: `${new Date().getTime()}`,
+                    });
+                    res.json({
+                        status: true,
+                        message: 'Automated Message sent'
+                    });
+                }
+            }else{
+                res.json({
+                    status: false,
+                    message: 'Item not found'
+                });
+            }
+        }
+    }else{
+        res.json({
+            status: false,
+            message: 'item found but Script not found'
+        });
+    }
+    
 });
 module.exports = router;
