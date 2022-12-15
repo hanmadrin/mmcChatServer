@@ -170,7 +170,9 @@ router.post('/setAutomatedOfferMessage', async (req, res) => {
             });
         }else{
             const item = await Item.findOne({
-                item_id: item_id
+                where:{
+                    item_id: item_id
+                }
             });
             if(item){
                 const messageQue = await Message.findOne({
@@ -185,6 +187,7 @@ router.post('/setAutomatedOfferMessage', async (req, res) => {
                         message: 'Automated Message already sent'
                     });
                 }else{
+                    // console.log(`fb id: ${item.fb_id}`);
                     await Message.create({
                         item_id: item_id,
                         sent_from: 'me',
