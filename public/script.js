@@ -96,6 +96,12 @@ const globals = {
                     type: "text",
                     editable: true
                 },
+                // Files
+                "files":{
+                    title: "Files",
+                    type: "files",
+                    editable: false
+                },
                 // MMC Offer$
                 "numbers9":{
                     title: "MMC Offer$",
@@ -238,18 +244,24 @@ const complexes = {
     }
 };
 const functions = {
-    mondayFetch: async (query,contentType="application/json") => {
+    mondayFetch: async (query,files=null) => {
+        const headers = new Headers();
+        // headers.append('Content-Type', 'application/json');
+        headers.append('Authorization', localStorage.getItem('Authorization'));
+
+        const formData = new FormData();
+        formData.append('query', query);
+        if(files){
+            formData.append('variables[file]', files);
+        }
+        const request = {
+            method: 'POST',
+            headers,
+            body: formData
+        }
         const mondayResponse = await fetch (
             `https://api.monday.com/v2`,
-            {
-                cache: "no-cache",
-                method: 'post',
-                headers:{
-                    'Content-Type': contentType,
-                    'Authorization': localStorage.getItem('Authorization')
-                },
-                body: JSON.stringify({query})
-            }
+            request
         );
         return mondayResponse;
     },
@@ -524,7 +536,7 @@ const dataLoads = {
                     id
             }
         `;
-        const responseJson = await functions.mondayFetch(query,'multipart/form-data');
+        const responseJson = await functions.mondayFetch(query);
         const response = responseJson.json();
         console.log(response);
     },
@@ -747,6 +759,56 @@ const dataLoads = {
             }
         }
         
+    },
+    deleteFilesColumnValue: async ({item_id,column_id})=>{
+        const allColumnIds = Object.keys(globals.mondayFetch.allColumnIds.borEffortBoard);
+        const query = `
+            mutation {
+                change_column_value (
+                    item_id: ${item_id},
+                    column_id:"${column_id}",
+                    board_id: ${globals.mondayFetch.borEffortBoardId},
+                    value:"{\\"clear_all\\": true}"
+                ){
+                    name,
+                    id,
+                    column_values(ids:[${allColumnIds.map(id=>`"${id}"`)}]){
+                        text,
+                        id,
+                    },
+                    updates{
+                        text_body,
+                        assets {
+                            public_url
+                        }
+                        creator{
+                            name,
+                            email,
+                            photo_small
+                        }
+                    }
+                }
+            }
+        `;
+        const mondayItemDataJSON = await functions.mondayFetch(query);
+        const mondayItemData = await mondayItemDataJSON.json();
+        return mondayItemData;
+    },
+    uploadFileToMondayColumn: async ({item_id,column_id,file})=>{
+        const allColumnIds = Object.keys(globals.mondayFetch.allColumnIds.borEffortBoard);
+        const query = `
+            mutation ($file: File!) { 
+                add_file_to_column (file: $file, item_id: ${item_id}, column_id: "${column_id}") { 
+                    id, 
+                } 
+            }
+        `;
+        const mondayItemDataJSON = await functions.mondayFetch(query,file);
+        const mondayItemData = await mondayItemDataJSON.json();
+        const mondayItem = await dataLoads.mondayItem();
+        return mondayItem;
+        
+        // return mondayItemData;
     },
     updateBorEffortSimpleColumnValue: async ({item_id,column_id,value})=>{
         const allColumnIds = Object.keys(globals.mondayFetch.allColumnIds.borEffortBoard);
@@ -1478,7 +1540,7 @@ const controllers = {
                         }
                     }else{
                         const columnValue = document.createElement('div');
-                        columnValue.classList = 'text-white text-center font-sub w-200px p-5px h-30px white-space-nowrap overflow-hidden text-overflow-ellipsis align-items-center box-shadow-inset line-height-30px border-radius-5px';
+                        columnValue.classList = 'position-relative text-white text-center font-sub w-200px p-5px h-30px white-space-nowrap overflow-hidden text-overflow-ellipsis align-items-center box-shadow-inset line-height-30px border-radius-5px';
                         if(storedValue.type === 'url'){
                             const link = document.createElement('a');
                             link.classList = 'text-white';
@@ -1486,6 +1548,88 @@ const controllers = {
                             link.target = '_blank';
                             link.innerText = column.text;
                             columnValue.append(link);
+                        }else if(storedValue.type == 'files'){
+                            if(column.text==''){
+                                const addButton = components.addButton({});
+                                const file = document.createElement('input');
+                                file.type = 'file';
+                                file.multiple = false;
+                                file.style.display = 'none';
+                                addButton.append(file);
+                                addButton.addEventListener('click', ()=>{
+                                    file.click();
+                                });
+                                
+                                file.addEventListener('change', async(e)=>{
+                                    controllers.popup({
+                                        state: true,
+                                        content: popups.loader(),
+                                        options: {
+                                            backDrop: false,
+                                            removeButton: false,
+                                        }
+                                    });
+                                    const updateData = await dataLoads.uploadFileToMondayColumn({
+                                        item_id: itemData.id,
+                                        column_id: columnId,
+                                        file: e.target.files[0],
+                                    });
+                                    
+                                    itemData = updateData;
+                                    controllers.notify({data: 'Files Successfully Deleted', type: 'primary'});
+                                    controllers.popup({state:false});
+                                    // console.log(updateData)
+                                    buildColumns();
+                                    
+                                    // formdata.append("query", "mutation ($file: File!) { \n  add_file_to_column (file: $file, item_id: 3251228063, column_id: \"files\") { \n    id \n  } \n}");
+                                    
+                                   
+                                });
+                                columnValue.append(addButton);
+
+                            }else{
+                                // columnValue.classList.add = 'position-relative';
+                                const files = column.text.split(',');
+                                const crossButton = components.crossButton({size:15});
+                                console.log(files)
+                                for(const file of files){
+                                    const fileLink = document.createElement('a');
+                                    const fileType = file.split('.').pop();
+                                    fileLink.setAttribute('data-type', fileType);
+                                    fileLink.classList = 'file-icon bg-transparent mx-5px';
+                                    fileLink.href = file
+                                    fileLink.target = '_blank';
+                                    columnValue.append(fileLink);
+                                }
+                                const crossButtonHolder = document.createElement('div');
+                                crossButtonHolder.classList = 'position-absolute top-0 right-10px h-100p d-flex align-items-center justify-content-center';
+                                crossButtonHolder.append(crossButton);
+                                columnValue.append(crossButtonHolder);
+                                crossButton.onclick = async ()=>{
+                                    controllers.popup({
+                                        state: true,
+                                        content: popups.loader(),
+                                        options: {
+                                            backDrop: false,
+                                            removeButton: false,
+                                        }
+                                    });
+                                    const updateData = await dataLoads.deleteFilesColumnValue({
+                                        item_id: itemData.id,
+                                        column_id: columnId,
+                                    });
+                                    if(updateData.data==null){
+                                        controllers.notify({data: 'File Deletion Failed', type: 'warning'});
+                                    }else{
+                                        itemData = updateData.data.change_column_value;
+                                        controllers.notify({data: 'Files Successfully Deleted', type: 'primary'});
+                                    }
+                                    controllers.popup({state:false});
+                                    // console.log(updateData)
+                                    buildColumns();
+                                };
+                            }
+                            
                         }else{
                             columnValue.innerText = column.text;
                         }
@@ -1845,6 +1989,16 @@ const components = {
         crossButton.style.width = `${size}px`;
         crossButton.append(designCross);
         return crossButton;
+    },
+    addButton: ({size=30,options={color:'white'}})=>{
+        const sendButton = document.createElement('span');
+        sendButton.classList = 'btn cursor-pointer p-5px bg-grey opacity-50 box-shadow-inset';
+        const sendIcon = document.createElement('span');
+        sendIcon.style.fontSize = `${size-10}px`;
+        sendIcon.style.color = options.color;
+        sendIcon.innerHTML = '+';
+        sendButton.append(sendIcon);
+        return sendButton;
     },
     banButton: ({size=30,options={color:'white'}})=>{
         const designBan = document.createElement('div');

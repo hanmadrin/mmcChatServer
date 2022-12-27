@@ -18,6 +18,10 @@ app.use('/extension', require('./routes/extension'));
 app.use('/vauto', require('./routes/vauto'));
 app.use('/socket', require('./routes/socket'));
 app.use('/public',express.static('./public'));
+// app.use('/public/:name', (req, res) => {
+    
+//     res.sendFile(`./public/${name}`, {root: __dirname});
+// });
 app.use('/', (req, res) => {res.sendFile('./public/index.html', {root: __dirname});});
 
 webSocket.on('connection', (socket) => {
