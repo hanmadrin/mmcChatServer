@@ -1,5 +1,5 @@
 const sequelize = require('sequelize');
-const env = require('dotenv').config();
+require('dotenv').config();
 module.exports =  new sequelize(
     process.env.DATABASE_NAME||"xentabtw_mmc_chat", 
     process.env.DATABASE_USERNAME||"xentabtw_mmc", 
