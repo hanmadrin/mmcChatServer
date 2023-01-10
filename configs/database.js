@@ -8,7 +8,7 @@ module.exports = new sequelize(
     process.env.DATABASE_USERNAME || "xentabtw_mmc",
     process.env.DATABASE_PASSWORD || "xentabtw_mmc",
     {
-        host: 'localhost',
+        host: '127.0.0.1',
         dialect: 'mysql',
         dialectOptions: {
             charset: 'utf8',
