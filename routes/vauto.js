@@ -363,5 +363,6 @@ router.post('/collectedNewMessageFromChat', async (req, res) => {
         action: 'new_message',
         timestamp: `${getCurrentTime()}`
     });
+    res.json({});
 });
 module.exports = router;
