@@ -311,7 +311,7 @@ router.post('/lastMessageOnServerByPostId', async (req, res) => {
 // hasRepliesToSend
 router.post('/hasRepliesToSend', async (req, res) => {
     const fb_id = req.fields.fb_id;
-    console.log(fb_id)
+    // console.log(fb_id)
     const unsentMessage = await Message.findOne({
         where: {
             fb_id: fb_id,
@@ -352,7 +352,7 @@ router.post('/hasUnsentFirstMessage', async (req, res) => {
     // where first message unsent
     const messageDB = await sequelize.query(`SELECT * FROM ( SELECT * FROM messages GROUP BY item_id HAVING COUNT(*) = 1 ) AS unique_item_id_group WHERE unique_item_id_group.fb_id='${fb_id}' AND unique_item_id_group.status='unsent' AND unique_item_id_group.mmc_user IS NULL LIMIT 1`);
     if(messageDB[0].length > 0){
-        console.log(messageDB[0][0]);
+        // console.log(messageDB[0][0]);
         const item_id = messageDB[0][0].item_id;
         const message = messageDB[0][0].message;
         const id = messageDB[0][0].id;
@@ -491,7 +491,7 @@ router.post('/sendMessagesToServer',async (req, res) => {
             if(sent_from_seller){
                 delete archiveItem.dataValues.id;
                 const item = archiveItem.dataValues;
-                console.log(item);
+                // console.log(item);
                 let messages = [];
                 for(let i = 0; i < archiveMessages.length; i++){
                     delete archiveMessages[i].dataValues.id;
@@ -502,7 +502,7 @@ router.post('/sendMessagesToServer',async (req, res) => {
                 }
                 const transaction = await sequelize.transaction();
                 try {
-                    console.log(messages);
+                    // console.log(messages);
                     restored = true;
                     await Item.create(item, {transaction: transaction});
                     await ArchiveItem.destroy({
@@ -521,8 +521,8 @@ router.post('/sendMessagesToServer',async (req, res) => {
                     });
                     await transaction.commit();
                 } catch (error) {
-                    console.log('error occured');
-                    console.log(error);
+                    // console.log('error occured');
+                    // console.log(error);
                 }
 
             }else{

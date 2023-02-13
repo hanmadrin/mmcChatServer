@@ -2,6 +2,7 @@
 
 const globals = {
     socket: io(),
+    admins:["Michael Ritter"],
     mondayFetch:{
         appraisalCounterBoard : 1255820475,
         borEffortBoardId : 1250230293,
@@ -269,6 +270,9 @@ const functions = {
         return new Promise(resolve=>{
             setTimeout(resolve, ms);
         });
+    },
+    americanHour: ()=>{
+        return new Date(new Date().toLocaleString('en-US', {timeZone: 'America/New_York'})).getHours();
     },
     showImageBigger: (e)=>{
         const image = e.target;
@@ -980,6 +984,16 @@ const dataLoads = {
         const mondayItemsDataJson = await functions.mondayFetch(query);
         const mondayItemsdata = await mondayItemsDataJson.json();
         return mondayItemsdata.data.boards[0].items.map(item=>item.id);
+    },
+    getActivities: async ()=>{
+        const activities = await fetch(`/api/getActivities`,{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const activitiesData = await activities.json();
+        return activitiesData;
     },
 };
 const controllers = {
@@ -1961,6 +1975,218 @@ const controllers = {
         controlHolder.append(controlBoard);
         return controlHolder;
     },
+    activityVisualizer: (data,newMessage)=>{
+        const hourCount = 8;
+        const height = 800;
+        const width = 1500;
+        const holder = document.createElement('div');
+        holder.style.height = `${height}px`;
+        holder.style.width = `${width}px`;
+        const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.classList = 'box-shadow-inset';
+        svg.setAttribute('height',height);
+        svg.setAttribute('width',width);
+        svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
+        
+        // unique mmc_user
+        const uniqueusers = data.map((d)=>d.mmc_user).filter((v,i,a)=>a.indexOf(v)===i&&v!=''&&v!=null);
+
+        const presentHour = functions.americanHour();
+        // get previous 8 hours
+        const hours = [];
+        for(let i=0;i<hourCount;i++){
+            const hour = `${(presentHour-i+24)%24}`.length==2?`${(presentHour-i+24)%24}`:`0${(presentHour-i+24)%24}`;
+
+            hours.push({
+                hour: `${hour}:00`
+            });
+        }
+         
+        
+        const xAxisUnit = width/(hours.length+1);
+        const yAxisUnit = height/(uniqueusers.length+1);
+
+
+        // draw y axis units
+        for(let i=0;i<uniqueusers.length;i++){
+            const y = yAxisUnit*(i)+yAxisUnit/2;
+            const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+            text.setAttribute('x',xAxisUnit/2);
+            text.setAttribute('y',y);
+            text.setAttribute('text-anchor','middle');
+            text.setAttribute('alignment-baseline','middle');
+            text.setAttribute('fill','#fff');
+            text.innerHTML = uniqueusers[i];
+            svg.append(text);
+        }
+        // draw x axis units
+        for(let i=hours.length;i>=1;i--){
+            const x = xAxisUnit*(hours.length-i)+xAxisUnit/2*3;
+            const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+            text.setAttribute('x',x);
+            text.setAttribute('y',yAxisUnit*uniqueusers.length + yAxisUnit/2);
+            text.setAttribute('text-anchor','middle');
+            text.setAttribute('alignment-baseline','middle');
+            // color white
+            text.setAttribute('fill','#fff');
+            text.innerHTML = hours[i-1].hour;
+            svg.append(text);
+        }
+        // draw y axis lines
+        for(let i=1;i<=uniqueusers.length;i++){
+            const y = yAxisUnit*i;
+            const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+            line.setAttribute('x1',0);
+            line.setAttribute('y1',y);
+            line.setAttribute('x2',width);
+            line.setAttribute('y2',y);
+            line.setAttribute('stroke','#fff');
+            line.setAttribute('stroke-opacity',0.05);
+            svg.append(line);          
+        }
+        // draw x axis lines
+        for(let i=1;i<=hours.length;i++){
+            const x = xAxisUnit*i;
+            const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+            line.setAttribute('x1',x);
+            line.setAttribute('y1',0);
+            line.setAttribute('x2',x);
+            line.setAttribute('y2',height);
+            line.setAttribute('stroke','#fff');
+            line.setAttribute('stroke-opacity',0.2);
+            svg.append(line);
+        }
+        // draw data boxes
+        const sectioninEachHour = 10;
+        const totalHours = hours.length;
+        const startingTimeStamp = Math.floor((new Date().getTime() - 60*60*1000*(hours.length-1))/(3600*1000))*3600*1000;
+        const totalSection = totalHours*sectioninEachHour;
+        for(let i=0;i<uniqueusers.length;i++){
+            
+            const userdatas = data.filter((d)=>d.mmc_user==uniqueusers[i]);
+            const dataInEachSection = {};
+
+            
+            
+            for(let j=0;j<totalSection;j++){
+                const sectionStarts = startingTimeStamp + (j*60/sectioninEachHour*60*1000);
+                const sectionEnds = startingTimeStamp + ((j+1)*60/sectioninEachHour*60*1000);
+                // difference between starts and 
+                dataInEachSection[j] = userdatas.filter((d)=>{
+                    // console.log(`${new Date(d.timestamp*1)} #### ${new Date(sectionStarts)}`);
+                    return d.timestamp>sectionStarts&&d.timestamp<=sectionEnds
+                }).length;
+                
+            }
+            // break;
+            // highest nearest 5
+            const highest = Math.ceil(Math.max(...Object.values(dataInEachSection))/5)*5;
+            
+            for(let j=0;j<totalSection;j++){
+                const x = xAxisUnit*(j/sectioninEachHour+1);
+                const y = yAxisUnit*(i+1);
+                const width = xAxisUnit/sectioninEachHour;
+                const height = yAxisUnit*(dataInEachSection[j]/highest);
+                const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+                rect.setAttribute('x',x);
+                rect.setAttribute('y',y-height);
+                rect.setAttribute('width',width);
+                rect.setAttribute('height',height);
+                rect.setAttribute('fill',`rgba(255,255,255,${dataInEachSection[j]/highest})`);
+                // show number on hover
+                rect.setAttribute('data-number',dataInEachSection[j]);
+                // hover effect
+                rect.addEventListener('mouseover',function(){
+                    const number = this.getAttribute('data-number');
+                    const x = this.getAttribute('x');
+                    const y = this.getAttribute('y');
+                    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+                    text.setAttribute('x',x);
+                    text.setAttribute('y',y);
+                    text.setAttribute('text-anchor','middle');
+                    text.setAttribute('alignment-baseline','middle');
+                    text.setAttribute('fill','#fff');
+                    text.innerHTML = number;
+                    svg.append(text);
+                    this.addEventListener('mouseout',function(){
+                        text.remove();
+                    });
+                });
+                svg.append(rect);
+            }
+            // break;
+            // console.log(highest);
+        }
+        // console.log(totalSection);
+        let errorState = false;
+        for(let i=0;i<totalSection;i++){
+            // console.log('here');
+            const sectionStarts = startingTimeStamp + (i*60/sectioninEachHour*60*1000);
+            const sectionEnds = startingTimeStamp + ((i+1)*60/sectioninEachHour*60*1000);
+            // difference between starts and 
+            const dataInSection = data.filter((d)=>{
+                // console.log(`${new Date(d.timestamp*1)} #### ${new Date(sectionStarts)}`);
+                return d.timestamp>sectionStarts&&d.timestamp<=sectionEnds
+            }).length;
+            
+            // console.log(dataInSection)
+            
+            if(dataInSection==0){
+                const newMessageInsection = newMessage.filter((d)=>{
+                    return d.timestamp>sectionStarts&&d.timestamp<=sectionEnds
+                });
+                const newMessageCount = newMessageInsection.length;
+                const drawErrorRect = ()=>{
+                    const x = xAxisUnit*(i/sectioninEachHour+1);
+                    const y = yAxisUnit*(uniqueusers.length+1);
+                    const width = xAxisUnit/sectioninEachHour;
+                    const height = yAxisUnit;
+                    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+                    rect.setAttribute('x',x);
+                    rect.setAttribute('y',y-height);
+                    rect.setAttribute('width',width);
+                    rect.setAttribute('height',height);
+                    rect.setAttribute('fill',`rgba(255,0,0,0.5)`);
+                    // show time on hover
+                    rect.setAttribute('data-number',newMessageInsection.map((d)=>new Date(d.timestamp*1).toLocaleTimeString()).join(','));
+                    // hover effect
+                    rect.addEventListener('mouseover',function(){
+                        const number = this.getAttribute('data-number');
+                        const x = this.getAttribute('x');
+                        const y = this.getAttribute('y');
+                        const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+                        text.setAttribute('x',x);
+                        text.setAttribute('y',y);
+                        text.setAttribute('text-anchor','middle');
+                        text.setAttribute('alignment-baseline','middle');
+                        text.setAttribute('fill','rgba(255,255,255,0.5)');
+                        text.innerHTML = number; 
+                        svg.append(text);
+                        this.addEventListener('mouseout',function(){
+                            text.remove();
+                        });
+                    });
+                    svg.append(rect);
+                };
+                if(errorState){
+                    console.log('here')
+                    drawErrorRect();
+                    // return true;
+                }else if(newMessageCount>0){
+                    // draw rect
+                    errorState = true;
+                    drawErrorRect();
+
+                }
+            }else{
+                errorState = false;
+            }
+        }
+        
+
+        holder.append(svg);
+        return holder;
+    },
 };
 const components = {
     crossButton: ({size=30,options={color:'white'}})=>{
@@ -2440,6 +2666,20 @@ const pages = {
             linkElement.innerText = linksData[link];
             main.append(linkElement);
         }
+        const userName = localStorage.getItem('userName');
+        const admins = globals.admins;
+        if(admins.includes(userName)){
+            const adminLinksData  = {
+                activities: 'Activities',
+            };
+            for(const link in adminLinksData){
+                const linkElement = document.createElement('a');
+                linkElement.href = '/' + link;
+                linkElement.classList = 'btn box-shadow-inset d-block p-20px border-radius-5px text-white link-decoration-none';
+                linkElement.innerText = adminLinksData[link];
+                main.append(linkElement);
+            }
+        }
         controllers.popup({state:false});
     },
     accountControl: async()=>{
@@ -2567,11 +2807,22 @@ const pages = {
         main.append(table);
         controllers.popup({state:false});
     },
+    activities: async()=>{
+        const activitiesData = await dataLoads.getActivities();
+        const main = document.getElementById('main');
+        main.replaceChildren();
+        const visual = controllers.activityVisualizer(activitiesData.fieldRepActivities , activitiesData.messageActivities);
+        main.append(visual);
+        // console.log(activities);
+        controllers.popup({state:false});
+    }
 };
 
 const view = async()=>{
     const url = new URL(window.location.href);
     const path = url.pathname;
+    const userName = localStorage.getItem('userName');
+    const admins = globals.admins;
     if(path=='/'){
         await pages.home();
     }else if(path=='/loadItems' || path=='/loadItems/'){
@@ -2586,6 +2837,8 @@ const view = async()=>{
         await pages.accountControl();
     }else if(path=='/dashboard' || path=='/dashboard/'){
         await pages.dashBoard();
+    }else if((path=='/activities' || path=='/activities/')&& admins.includes(userName)){
+        await pages.activities();
     }else{
         await pages.notFound();
     }

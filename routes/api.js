@@ -11,6 +11,7 @@ const sequelize = require('../configs/database');
 const ArchiveItem = require('../models/ArchiveItem');
 const ArchiveMessage = require('../models/ArchiveMessage');
 const Account = require('../models/Account');
+const Action = require('../models/Action');
 router.post('/collectRawItems', async (req, res) => {
 
     res.sendStatus(200);
@@ -67,7 +68,7 @@ router.post('/facebookAccountItemCount', async (req, res) => {
             fb_id: fb_id         
         }
     });
-    console.log(itemsCount);
+    // console.log(itemsCount);
     res.json({count: itemsCount});
 });
 // accountMessages
@@ -243,6 +244,12 @@ router.post('/sendMessage', async (req, res) => {
     };
     const item = await Item.findOne({where: {item_id: item_id}});
     if(item){
+        await Action.create({
+            item_id,
+            'action': 'send_message',
+            'timestamp': `${new Date().getTime()}`,
+            'mmc_user': mmc_user,
+        });
         await Message.create(messageData);
         webSocket.to(`fb_id_${fb_id}`).emit('response', {
             action: 'notifyLastMessageFromMe',
@@ -265,6 +272,38 @@ router.post('/sendMessage', async (req, res) => {
     }
     
     res.json({});
+});
+router.post('/getActivities', async (req, res) => {
+    const fieldRepActivities = await Action.findAll({
+        attributes: [
+            'mmc_user',
+            'timestamp',
+        ],
+        sort: [
+            ['timestamp', 'ASC']
+        ],
+        where:{
+            action: 'send_message',
+            timestamp:{
+                [Sequelize.Op.gt]: new Date().getTime() - 1000 * 60 * 60 * 8
+            }
+        }
+    });
+    const messageActivities = await Action.findAll({
+        attributes: [
+            'timestamp',
+        ],
+        sort: [
+            ['timestamp', 'ASC']
+        ],
+        where:{
+            action: 'new_message',
+            timestamp:{
+                [Sequelize.Op.gt]: new Date().getTime() - 1000 * 60 * 60 * 8
+            }
+        }
+    });
+    res.json({fieldRepActivities,messageActivities});
 });
 // itemsView
 router.post('/viewItemsServerIds', async (req, res) => {
@@ -329,7 +368,7 @@ router.post('/archiveItemOnServer', async (req, res) => {
         }
         const transaction = await sequelize.transaction();
         try {
-            console.log(item);
+            // console.log(item);
             await ArchiveItem.create(archiveItem, {transaction: transaction});
             await Item.destroy({
                 where: {
@@ -346,8 +385,8 @@ router.post('/archiveItemOnServer', async (req, res) => {
             });
             await transaction.commit();
         } catch (error) {
-            console.log(error);
-            console.log('error occured')
+            // console.log(error);
+            // console.log('error occured')
         }
     }
     webSocket.to(`fb_id_${fb_id}`).emit('response', {
@@ -363,8 +402,10 @@ router.post('/getAccountControls', async (req, res) => {
     const accounts = await Account.findAll({
         order: [
             ['deviceId', 'ASC']
-        ]
+        ],
+        // logging: false
     });
+    // console.log('here');
     res.json(accounts);
 });
 // updateAccountControls
@@ -381,6 +422,7 @@ router.post('/updateAccountControls', async (req, res) => {
             id: id
         }
     });
+    // console.log('here');
     res.json({});
 });
 // getDashBoardData
