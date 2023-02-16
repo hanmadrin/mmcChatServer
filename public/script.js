@@ -2,7 +2,7 @@
 
 const globals = {
     socket: io(),
-    admins:["Michael Ritter"],
+    admins:["Michael Ritter","Jason Matthews"],
     mondayFetch:{
         appraisalCounterBoard : 1255820475,
         borEffortBoardId : 1250230293,
