@@ -12,7 +12,6 @@ module.exports = new sequelize(
         dialect: 'mysql',
         dialectOptions: {
             charset: 'utf8',
-            collate: 'utf8mb4_general_ci',
             multipleStatements: true
         },
         logging: false,

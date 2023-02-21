@@ -503,6 +503,12 @@ router.post('/sendMessagesToServer',async (req, res) => {
                 const transaction = await sequelize.transaction();
                 try {
                     // console.log(messages);
+                    for(let i = 0; i < messages.length; i++){
+                        // buffer to utf-8
+                        if(messages[i].message){
+                            messages[i].message = Buffer.from(messages[i].message, 'base64').toString('utf-8');
+                        }
+                    }
                     restored = true;
                     await Item.create(item, {transaction: transaction});
                     await ArchiveItem.destroy({
