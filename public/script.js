@@ -1356,11 +1356,13 @@ const controllers = {
                 sendButton.append(sendIcon);
                 sendButton.addEventListener('click', async()=>{
                     const message = textarea.value;
-                    if(message){
-                        const userName = window.localStorage.getItem('userName');
+                    const userName = window.localStorage.getItem('userName');
+                    if(message && userName){
                         controllers.singleMessageNew({sent_from:'me',message:message,type:'text',sending:true,mmc_user:userName});
                         await dataLoads.sendMessage({message,userName});
                         textarea.value = '';
+                    }else if(!userName){
+                        controllers.notify({message:'Please! Refresh the page. Cannot recongnize you!!',type:'error'});
                     }
                 });
                 footer.append(textarea,sendButton);
