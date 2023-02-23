@@ -1362,7 +1362,7 @@ const controllers = {
                         await dataLoads.sendMessage({message,userName});
                         textarea.value = '';
                     }else if(!userName){
-                        controllers.notify({message:'Please! Refresh the page. Cannot recongnize you!!',type:'danger'});
+                        controllers.notify({data:'Please! Refresh the page. Cannot recongnize you!!',type:'danger'});
                     }
                 });
                 footer.append(textarea,sendButton);
