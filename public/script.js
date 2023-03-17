@@ -2,7 +2,7 @@
 
 const globals = {
     socket: io(),
-    admins:["Michael Ritter","Jason Matthews","Kaitlin Ribble"],
+    admins:["Michael Ritter","Jason Matthews","Kaitlin Ribble","Md Hasan Mahmud Rimon"],
     mondayFetch:{
         appraisalCounterBoard : 1255820475,
         borEffortBoardId : 1250230293,
@@ -995,6 +995,17 @@ const dataLoads = {
         const activitiesData = await activities.json();
         return activitiesData;
     },
+    getLaserAutovinActivities: async ()=>{
+        const activities = await fetch(`/vauto/getLaserAutovinActivities`,{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const activitiesData = await activities.json();
+        console.log(activitiesData)
+        return activitiesData;
+    }
 };
 const controllers = {
     ground: ()=>{
@@ -2673,6 +2684,8 @@ const pages = {
         if(admins.includes(userName)){
             const adminLinksData  = {
                 activities: 'Activities',
+                laserAutovinDashboard: 'Laser Autovin Dashboard',
+                laserAutovinActivities: 'Laser Autovin Activities',
             };
             for(const link in adminLinksData){
                 const linkElement = document.createElement('a');
@@ -2817,9 +2830,302 @@ const pages = {
         main.append(visual);
         // console.log(activities);
         controllers.popup({state:false});
+    },
+    laserAutovinDashboard: async()=>{
+        const state = {
+            data: [],
+        };
+        const getAllUsersWithData = async () => {
+            try {
+                const response = await fetch('/vauto/get-all-users-with-data', {
+                    method: 'GET',
+                });
+                const data = await response.json();
+                if (response.status !== 200) {
+                    controllers.notify({ data: data.message, type: 'danger' });
+                }
+                return data;
+            } catch (err) {
+                console.log(err);
+            }
+        };
+        const labelWithInput = (labelText, inputType, inputPlaceholder) => {
+            const label = document.createElement('label');
+            label.innerText = labelText;
+            const input = document.createElement('input');
+            input.setAttribute('type', inputType);
+            if (inputType === 'password') {
+                input.addEventListener('focus', () => {
+                    input.setAttribute('type', 'text');
+                });
+                input.addEventListener('blur', () => {
+                    input.setAttribute('type', 'password');
+                });
+            }
+            input.setAttribute('placeholder', inputPlaceholder);
+            const labelWithInput = document.createElement('div');
+            labelWithInput.classList.add('label-with-input');
+            labelWithInput.appendChild(label);
+            labelWithInput.appendChild(input);
+            return labelWithInput;
+        };
+        const userCard = (index) => {
+            const userCard = document.createElement('div');
+            userCard.classList.add('user-card');
+            const userHeaderSection = document.createElement('div');
+            userHeaderSection.classList.add('user-header-section');
+            const inputDiv = document.createElement('div');
+            inputDiv.classList.add('input-div');
+            inputDiv.appendChild(labelWithInput('Username', 'text', 'Username'));
+            inputDiv.children[0].children[1].value = state.data[index].username;
+            inputDiv.children[0].children[1].addEventListener('keyup', (e) => {
+                const saveButton = document.querySelector(`[data-key="${index}-save"]`);
+                if (e.target.value !== state.data[index].username) {
+                    state.data[index].username = e.target.value;
+                    saveButton.classList.remove('disabled-button');
+                    saveButton.removeAttribute('disabled');
+                    saveButton.classList.add('save-button');
+                } else {
+                    saveButton.classList.add('disabled-button');
+                    saveButton.setAttribute('disabled', 'true');
+                }
+            });
+            inputDiv.appendChild(labelWithInput('Password', 'password', 'Password'));
+            inputDiv.children[1].children[1].value = state.data[index].password;
+            inputDiv.children[1].children[1].addEventListener('keyup', (e) => {
+                const saveButton = document.querySelector(`[data-key="${index}-save"]`);
+                if (e.target.value !== state.data[index].password) {
+                    state.data[index].password = e.target.value;
+                    saveButton.classList.remove('disabled-button');
+                    saveButton.removeAttribute('disabled');
+                    saveButton.classList.add('save-button');
+                } else {
+                    saveButton.classList.add('disabled-button');
+                    saveButton.setAttribute('disabled', 'true');
+                }
+            });
+            inputDiv.appendChild(labelWithInput('Display Name', 'text', 'Display Name'));
+            inputDiv.children[2].children[1].value = state.data[index].display_name;
+            inputDiv.children[2].children[1].addEventListener('keyup', (e) => {
+                const saveButton = document.querySelector(`[data-key="${index}-save"]`);
+                if (e.target.value !== state.data[index].display_name) {
+                    state.data[index].display_name = e.target.value;
+                    saveButton.classList.remove('disabled-button');
+                    saveButton.removeAttribute('disabled');
+                    saveButton.classList.add('save-button');
+                } else {
+                    saveButton.classList.add('disabled-button');
+                    saveButton.setAttribute('disabled', 'true');
+                }
+            });
+            inputDiv.appendChild(labelWithInput('Device Id', 'text', 'Device Id'));
+            inputDiv.children[3].children[1].value = state.data[index].device_id;
+            inputDiv.children[3].children[1].addEventListener('keyup', (e) => {
+                const saveButton = document.querySelector(`[data-key="${index}-save"]`);
+                if (e.target.value !== state.data[index].device_id) {
+                    state.data[index].device_id = e.target.value;
+                    saveButton.classList.remove('disabled-button');
+                    saveButton.removeAttribute('disabled');
+                    saveButton.classList.add('save-button');
+                } else {
+                    saveButton.classList.add('disabled-button');
+                    saveButton.setAttribute('disabled', 'true');
+                }
+            });
+            userHeaderSection.appendChild(inputDiv);
+            const userCurrent = document.createElement('div');
+            userCurrent.classList.add('user-current');
+            userCurrent.setAttribute('data-key', `${index}-current`);
+            const currentSpan = document.createElement('span');
+            currentSpan.innerText = `Current: ${state.data[index].current} / `;
+            const maxSpan = document.createElement('span');
+            maxSpan.innerText = `${state.data[index].max}`;
+            maxSpan.setAttribute('contenteditable', 'true');
+            maxSpan.style.minWidth = '50px';
+            maxSpan.style.display = 'inline-block';
+            maxSpan.addEventListener('keyup', (e) => {
+                const getNumber = e.target.innerText.match(/\d+/g) || 0;
+                if (state.data[index].current <= parseInt(getNumber)) {
+                    maxSpan.innerText = parseInt(getNumber);
+                    const saveButton = document.querySelector(`[data-key="${index}-save"]`);
+                    if (e.target.innerText !== state.data[index].max) {
+                        state.data[index].max = parseInt(getNumber);
+                        saveButton.classList.remove('disabled-button');
+                        saveButton.removeAttribute('disabled');
+                        saveButton.classList.add('save-button');
+                    } else {
+                        saveButton.classList.add('disabled-button');
+                        saveButton.setAttribute('disabled', 'true');
+                    }
+                } else {
+                    maxSpan.innerText = state.data[index].current;
+                }
+            });
+            const saveButton = document.createElement('button');
+            saveButton.innerText = 'Save';
+            saveButton.classList.add('disabled-button');
+            saveButton.setAttribute('data-key', `${index}-save`);
+            saveButton.setAttribute('disabled', 'true');
+            saveButton.addEventListener('click', async () => {
+                console.log(state.data[index]);
+                console.log(`/vauto/update-data/${state.data[index].id}`);
+                const response = await fetch(`/vauto/update-data/${state.data[index].id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(state.data[index]),
+                });
+
+                const data = await response.json();
+                if (response.status !== 200) {
+                    controllers.notify({ data: data.message, type: 'danger' });
+                } else {
+                    controllers.notify({ data: data.message, type: 'success' });
+                    saveButton.classList.add('disabled-button');
+                    saveButton.setAttribute('disabled', 'true');
+                }
+            });
+            userCurrent.appendChild(currentSpan);
+            userCurrent.appendChild(maxSpan);
+            userCurrent.appendChild(saveButton);
+            userHeaderSection.appendChild(userCurrent);
+            userCard.appendChild(userHeaderSection);
+            return userCard;
+        };
+        const singleBar = (index, parsedTimeData, key, max) => {
+            const singleBar = document.createElement('div');
+            singleBar.classList.add('single-bar');
+            const bar = document.createElement('div');
+            bar.classList.add('bar');
+            bar.setAttribute('data-key', `${index}-${key}-bar`);
+            bar.style.height = `${parsedTimeData[key] / max * 100}%`;
+            singleBar.appendChild(bar);
+            return singleBar;
+        };
+        const barChartDiv = (index) => {
+            const { time_data: parsedTimeData, current, max } = state.data[index];
+            const barChartDiv = document.createElement('div');
+            barChartDiv.classList.add('bar-chart-div');
+            barChartDiv.style.height = '300px';
+            const barChart = document.createElement('div');
+            barChart.classList.add('bar-chart');
+            Object.keys(parsedTimeData).forEach(key => {
+                barChart.appendChild(singleBar(index, parsedTimeData, key, max));
+            });
+            barChartDiv.appendChild(barChart);
+            const chartText = document.createElement('div');
+            chartText.classList.add('chart-text');
+            Object.keys(parsedTimeData).forEach(key => {
+                const singleChartText = document.createElement('div');
+                singleChartText.classList.add('single-chart-text');
+        
+                const chartControlDiv = document.createElement('div');
+                chartControlDiv.classList.add('chart-control-div');
+                chartControlDiv.appendChild(barChangeButton(index, key, '-'));
+                const counter = document.createElement('span');
+                counter.classList.add('counter');
+                counter.innerText = state.data[index].time_data[key];
+                counter.setAttribute('data-key', `${index}-${key}`);
+                chartControlDiv.appendChild(counter);
+                chartControlDiv.appendChild(barChangeButton(index, key, '+'));
+        
+                singleChartText.appendChild(chartControlDiv);
+                singleChartText.appendChild(barLabelDiv(key));
+        
+                chartText.appendChild(singleChartText);
+            });
+            barChartDiv.appendChild(chartText);
+            Array(6).fill(0).forEach((_, i) => {
+                const barChartLine = document.createElement('div');
+                barChartLine.classList.add('bar-chart-line');
+                barChartLine.style.bottom = `${(i) * 20}%`;
+                barChart.appendChild(barChartLine);
+                const count = document.createElement('div');
+                count.style.position = 'absolute';
+                count.style.left = '-10px';
+                count.style.bottom = '-10px';
+                barChartLine.appendChild(count);
+                count.innerText = parseInt(max * (i) / 5);
+            });
+            return barChartDiv;
+        };
+        const barLabelDiv = (key) => {
+            const barText = document.createElement('div');
+            barText.classList.add('bar-text');
+            barText.innerText = parseInt(key.replace('h', '')) > 12 ? `${parseInt(key.replace('h', '')) - 12}:00 PM` : `${parseInt(key.replace('h', ''))}:00 AM`;
+            return barText;
+        }
+        const barChangeButton = (index, key, type) => {
+            const data = state.data[index];
+            const barChangeButton = document.createElement('button');
+            barChangeButton.classList.add('bar-change-button');
+            barChangeButton.innerText = type;
+            barChangeButton.addEventListener('click', () => {
+                const counterDiv = document.querySelector(`[data-key="${index}-${key}"]`);
+                const bar = document.querySelector(`[data-key="${index}-${key}-bar"]`);
+                const current = document.querySelector(`[data-key="${index}-current"] span:first-child`);
+                if (type === '+') {
+                    const total = Object.keys(data.time_data).reduce((acc, key) => acc + data.time_data[key], 0);
+                    if (total >= data.max) return;
+                    state.data[index].time_data[key]++;
+                    state.data[index].current++;
+                    counterDiv.innerText = state.data[index].time_data[key];
+                    bar.style.height = `${state.data[index].time_data[key] / state.data[index].max * 100}%`;
+                    current.innerText = `Current: ${total + 1} / `;
+                    const saveButton = document.querySelector(`[data-key="${index}-save"]`);
+                    saveButton.classList.remove('disabled-button');
+                    saveButton.removeAttribute('disabled');
+                    saveButton.classList.add('save-button');
+                } else {
+                    if (state.data[index].time_data[key] <= 0) return;
+                    state.data[index].time_data[key]--;
+                    state.data[index].current--;
+                    counterDiv.innerText = state.data[index].time_data[key];
+                    bar.style.height = `${state.data[index].time_data[key] / state.data[index].max * 100}%`;
+                    const total = Object.keys(data.time_data).reduce((acc, key) => acc + data.time_data[key], 0);
+                    current.innerText = `Current: ${total} / `;
+                    const saveButton = document.querySelector(`[data-key="${index}-save"]`);
+                    saveButton.classList.remove('disabled-button');
+                    saveButton.removeAttribute('disabled');
+                    saveButton.classList.add('save-button');
+                }
+            });
+            return barChangeButton;
+        };
+        const body = document.querySelector('#main');
+        const dashboardPage = document.createElement('div');
+        dashboardPage.classList.add('dashboard-page');
+        const dashboardHeader = document.createElement('div');
+        dashboardHeader.classList.add('dashboard-header');
+        const dashboardPageTitle = document.createElement('h1');
+        dashboardPageTitle.classList.add('dashboard-page-title');
+        dashboardPageTitle.innerText = 'Laser Autovin';
+        const response = await getAllUsersWithData();
+        console.log(response);
+        state.data = response.map(dt => ({ ...dt, time_data: JSON.parse(dt.time_data) }));
+        dashboardHeader.appendChild(dashboardPageTitle);
+        dashboardPage.appendChild(dashboardHeader);
+        state.data.forEach((user, index) => {
+            const userCardDiv = userCard(index);
+            userCardDiv.appendChild(barChartDiv(index));
+            dashboardPage.appendChild(userCardDiv);
+        });
+
+        body.replaceChildren(dashboardPage);
+        controllers.popup({state:false});
+    },
+    laserAutovinActivities : async()=>{
+        const activitiesData = await dataLoads.getLaserAutovinActivities();
+        const main = document.getElementById('main');
+        main.replaceChildren();
+        const visual = controllers.activityVisualizer(activitiesData.fieldRepActivities , activitiesData.messageActivities);
+        main.append(visual);
+        // console.log(activities);
+        controllers.popup({state:false});
     }
 };
-
+// window.history.pushState({}, '', `/account/${fb_id}`);
 const view = async()=>{
     const url = new URL(window.location.href);
     const path = url.pathname;
@@ -2841,6 +3147,10 @@ const view = async()=>{
         await pages.dashBoard();
     }else if((path=='/activities' || path=='/activities/')&& admins.includes(userName)){
         await pages.activities();
+    }else if((path=='/laserAutovinDashboard' || path=='/laserAutovinDashboard/')&& admins.includes(userName)){
+        await pages.laserAutovinDashboard();
+    }else if((path=='/laserAutovinActivities' || path=='/laserAutovinActivities/')&& admins.includes(userName)){
+        await pages.laserAutovinActivities();
     }else{
         await pages.notFound();
     }

@@ -9,15 +9,17 @@ const Item = require('../models/Item');
 const Script = require('../models/Script');
 const Message = require('../models/Message');
 const Action = require('../models/Action');
+const AutovinAction = require('../models/AutovinAction');
+const ExpressError = require("../utilities/expressError");
+const Data= require('../models/Data');
 const getCurrentTime = ()=>{
     return new Date().getTime();
 };
 const waitingTime = 300*1000;
 let i = 0;
-
 router.post('/getNewItemId', async (req, res) => {
-    const deviceId = req.query.deviceId || req.fields.deviceId;
-    if(!deviceId){
+    const device_id = req.query.device_id || req.fields.device_id;
+    if(!device_id){
         res.json({
             action: 'setDeviceId'
         });
@@ -25,35 +27,130 @@ router.post('/getNewItemId', async (req, res) => {
     }else{
         await AppraisalItem.destroy({
             where: {
-                status: deviceId
+                status: device_id
             }
         });
     }
-    const item = await AppraisalItem.findOne({
-        where: {
-            status: 'new'
-        }
-    });
-    if(item){
-        item.status = deviceId;
-        item.save();
+    const currentTime = getCurrentTime();
+    if(currentTime - i > waitingTime){
+        // time to get new item and work on red timing
+        i = currentTime;
         res.json({
-            item_id: item.item_id,
-            action: 'workOnItem'
+            action: 'collectNewItem'
         });
     }else{
-        const currentTime = getCurrentTime();
-        if(currentTime - i > waitingTime){
-            i = currentTime;
-            res.json({
-                action: 'collectNewItem'
+        const item = await AppraisalItem.findOne({
+            where: {
+                status: 'new'
+            }
+        });
+        if(item){
+            const currentUSHour = new Date(new Date().toLocaleString("en-US", {timeZone: "America/New_York"})).getHours();
+            // const nextUSHour = currentUSHour + 1;
+            const hourStartingTimestamp = new Date().setMinutes(0,0,0);
+            // console.log(hourStartingTimestamp)
+            const availableData = await Data.findAll({
+                where: {
+                    device_id: device_id,
+                }
             });
+            const hourFilteredData = [];
+            if(availableData){
+                const dataValues = availableData.map(data => data.dataValues);
+                for(let i=0;i<dataValues.length;i++){
+                    const data = dataValues[i];
+                    const timeData = JSON.parse(data.time_data);
+                    const autovinActionCount = await AutovinAction.count({
+                        where: {
+                            timestamp: {
+                                [Sequelize.Op.gte]: hourStartingTimestamp,
+                            },
+                            account_id: data.id,
+                        }
+                    });
+                    console.log(`count: ${autovinActionCount} and id: ${data.id} and hourMax ${timeData[`h${currentUSHour}`]}`);
+                    console.log(timeData[`h${currentUSHour}`] > autovinActionCount);
+                    if(timeData[`h${currentUSHour}`] > autovinActionCount){
+                        hourFilteredData.push(data);
+                    }
+                }
+
+                if(hourFilteredData.length > 0){
+                    const data = hourFilteredData[0];
+                    item.status = device_id;
+                    await item.save();
+                    // response to delete status to every 8th item and delete other
+                    const lastEightItems = await AutovinAction.findAll({
+                        where: {
+                            account_id: data.id,
+                        },
+                        order: [
+                            ['id', 'DESC']
+                        ],
+                        limit: 7
+                    });
+                    let deleteStatus = false;
+                    console.log(lastEightItems)
+                    if(!lastEightItems || lastEightItems.length == 0){
+                        deleteStatus = false;
+                    }else{
+                        for(let i=0;i<lastEightItems.length;i++){
+                            const lastItem = lastEightItems[i];
+                            if(lastItem.action == 'deleted'){
+                                deleteStatus = true;
+                                break;
+                            }
+                        }
+                    }
+                    res.json({
+                        item_id: item.item_id,
+                        action: 'workOnItem',
+                        data: data,
+                        delete: deleteStatus
+                    });
+                }else{
+                    res.json({
+                        action: 'tryLaterAgain'
+                    });
+                }
+            }else{
+                res.json({
+                    action: 'tryLaterAgain'
+                });
+            }
         }else{
             res.json({
                 action: 'tryLaterAgain'
             });
         }
     }
+    // const item = await AppraisalItem.findOne({
+    //     where: {
+    //         status: 'new'
+    //     }
+    // });
+    // if(item){
+    //     const currentUSHour = new Date(new Date().toLocaleString("en-US", {timeZone: "America/New_York"})).getHours();
+
+    //     item.status = deviceId;
+    //     item.save();
+    //     res.json({
+    //         item_id: item.item_id,
+    //         action: 'workOnItem'
+    //     });
+    // }else{
+    //     const currentTime = getCurrentTime();
+    //     if(currentTime - i > waitingTime){
+    //         i = currentTime;
+    //         res.json({
+    //             action: 'collectNewItem'
+    //         });
+    //     }else{
+    //         res.json({
+    //             action: 'tryLaterAgain'
+    //         });
+    //     }
+    // }
 });
 router.post('/itemAppraised', async (req, res) => {
     const deviceId = req.query.deviceId || req.fields.deviceId;
@@ -73,50 +170,81 @@ router.post('/itemAppraised', async (req, res) => {
     });
 });
 router.post('/uploadNewItems', async (req, res) => {
-    const deviceId = req.query.deviceId || req.fields.deviceId;
-    if(!deviceId){
+    const device_id = req.query.device_id || req.fields.device_id;
+    if(!device_id){
         res.json({
             action: 'setDeviceId'
         });
         return false;
     }
     const item_ids = req.query.item_ids || req.fields.item_ids;
-    const unreadMessageOnChat = req.query.unreadMessageOnChat || req.fields.unreadMessageOnChat;
+    // const unreadMessageOnChat = req.query.unreadMessageOnChat || req.fields.unreadMessageOnChat;
     //if item_ids array
+    console.log(item_ids);
     if(item_ids){
         if(item_ids.length>0){
             let appraisalItemsArray = [];
             for(let i = 0; i < item_ids.length; i++){
                 appraisalItemsArray.push({item_id: item_ids[i]}); 
             }
+            console.log(appraisalItemsArray)
             await AppraisalItem.bulkCreate(appraisalItemsArray,{
                 ignoreDuplicates: true,
                 returning: true,
                 fields: ['item_id']
             }); 
-            const newAppraisalItemCount = await AppraisalItem.count({
-                where: {
-                    status: 'new'
-                }
-            });
+            // const newAppraisalItemCount = await AppraisalItem.count({
+            //     where: {
+            //         status: 'new'
+            //     }
+            // });
             // console.log(newAppraisalItemCount);
-            if(newAppraisalItemCount > 0){
-                res.json({
-                    action: 'collectNewItem'
-                });
-                return true; 
-            }else{
-                res.json({
-                    action: 'tryLaterAgain'
-                });
-                return false;
-            }
+            // if(newAppraisalItemCount > 0){
+            //     res.json({
+            //         action: 'collectNewItem'
+            //     });
+            //     return true; 
+            // }else{
+            //     res.json({
+            //         action: 'tryLaterAgain'
+            //     });
+            //     return false;
+            // }
         }
     }
 
     res.json({
         action: 'tryLaterAgain'
     });
+});
+router.post('/autovinAction', async (req, res) => {
+    const {item_id, account_id , action} = req.fields.data||{};
+    const timestamp = getCurrentTime();
+    if(item_id && account_id && action){
+        const autovinAction = await AutovinAction.create({
+            item_id: item_id,
+            account_id: account_id,
+            action: action,
+            timestamp: timestamp
+        });
+        if(autovinAction){
+            res.json({
+                status: true,
+                message: 'Action saved'
+            });
+        }else{
+            res.json({
+                status: false,
+                message: 'Action not saved'
+            });
+        }
+    }else{
+        res.json({
+            status: false,
+            message: 'Item id, account id and action are required'
+        });
+    }
+
 });
 
 router.post('/isItemActiveOnChat', async (req, res) => {
@@ -365,4 +493,94 @@ router.post('/collectedNewMessageFromChat', async (req, res) => {
     });
     res.json({});
 });
+
+
+router.get('/get-all-users-with-data', async (req, res, next) => {
+    try {
+        const data = await Data.findAll({});
+        res.json(data);
+    } catch (err) {
+        next(err);
+    }
+});
+router.post('/update-data/:id', async (req, res, next) => {
+    try {
+        const { id } = (req.params);
+        const { username, password, time_data, current, max, display_name,device_id } = req.fields;
+        const data = await Data.findOne({
+            where: {
+                id,
+            },
+        });
+        // show data values only
+        // console.log(data.dataValues);
+        if (!data)
+            throw new ExpressError(404, "Data not found");
+        const updatedData = await data.update({
+            username,
+            password,
+            time_data: JSON.stringify(time_data),
+            current,
+            max,
+            display_name,
+            device_id
+        });
+
+        res.json({
+            message: "Data updated",
+        });
+    } catch (err) {
+        // console.log(err);
+        next(err);
+    }
+});
+router.post('/autovinAction', async (req, res, next) => {
+    try {
+        const { action, item_id, account_id } = req.fields;
+        const data = await AutovinAction.create({
+            action,
+            item_id,
+            account_id,
+            timestamp: `${getCurrentTime()}`
+        });
+        res.json({
+            message: "Action added",
+        });
+    } catch (err) {
+        // console.log(err);
+        next(err);
+    }
+});
+router.post('/getLaserAutovinActivities', async (req, res) => {
+    const fieldRepActivities = await AutovinAction.findAll({
+        attributes:[
+            'account_id',
+            'timestamp',
+        ],
+        sort: [
+            ['timestamp', 'ASC']
+        ],
+        where: {
+            timestamp:{
+                [Sequelize.Op.gt]: new Date().getTime() - 1000 * 60 * 60 * 8
+            }
+        }
+    });
+    const dataValues = fieldRepActivities.map(item => item.dataValues);
+    const accountIdsplayNames = await Data.findAll({
+        attributes: [
+            'id',
+            'display_name'
+        ]
+    });
+    const accountIdsplayNamesValues = accountIdsplayNames.map(item => item.dataValues);
+    for(let i = 0; i < dataValues.length; i++){
+        const user = accountIdsplayNamesValues.filter(item => item.id == dataValues[i].account_id);
+        console.log(user)
+        dataValues[i].mmc_user = (user[0]||{display_name:'deleted_user'}).display_name;
+    }
+    const messageActivities = [];
+    res.json({fieldRepActivities, messageActivities});
+
+})
 module.exports = router;

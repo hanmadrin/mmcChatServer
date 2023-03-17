@@ -6,7 +6,7 @@ require('dotenv').config();
 module.exports = new sequelize(
     process.env.DATABASE_NAME || "xentabtw_mmc_chat",
     process.env.DATABASE_USERNAME || "rimo",
-    process.env.DATABASE_PASSWORD || "p@ssword69",
+    process.env.DATABASE_PASSWORD,
     {
         host: '127.0.0.1',
         dialect: 'mysql',

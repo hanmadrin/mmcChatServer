@@ -19,12 +19,16 @@ app.use('/extension', require('./routes/extension'));
 app.use('/vauto', require('./routes/vauto'));
 app.use('/socket', require('./routes/socket'));
 app.use('/public',express.static('./public'));
+const ExpressError = require('./utilities/expressError');
 // app.use('/public/:name', (req, res) => {
      
 //     res.sendFile(`./public/${name}`, {root: __dirname});
 // });
 app.use('/', (req, res) => {res.sendFile('./public/index.html', {root: __dirname});});
-
+app.use((err, req, res, next) => {
+    const { statusCode = 500, message = "Server Error" } = err;
+    res.status(statusCode).json(message);
+});
 webSocket.on('connection', (socket) => {
     // const validRooms = ['interface', 'chat'];
     // if(validRooms.includes(socket.handshake.query.room)){
