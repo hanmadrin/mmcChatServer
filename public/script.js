@@ -68,7 +68,8 @@ const globals = {
                 "Close Initial Offer",
                 "Archived",
                 "Restored",
-                "NEED FORM"
+                "NEED FORM",
+                "Waiting"
             ]
         },
         allColumnIds:{
