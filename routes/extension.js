@@ -687,4 +687,32 @@ router.post('/serverLinkGoneUpdate', async (req, res) => {
     });
     res.json({});
 });
+// sellerMessageCount
+router.post('/sellerMessageCount', async (req, res) => {
+    const fb_post_id = req.fields.fb_post_id;
+    if(!fb_post_id){
+        res.sendStatus(504);
+        return;
+    }else{
+        const item = await Item.findOne({
+            where: {
+                fb_post_id: fb_post_id
+            },
+            attributes: ['item_id']
+        });
+        if(item){
+            const messagesCount = await Message.count({
+                where: {
+                    item_id: item.item_id,
+                    sent_from: 'seller'
+                }
+            });
+            res.json({count:messagesCount});
+            return;
+        }else{
+            res.json({count:0});
+            return;
+        }
+    } 
+});
 module.exports = router;
