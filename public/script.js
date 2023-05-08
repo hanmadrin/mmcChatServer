@@ -620,6 +620,20 @@ const dataLoads = {
         const messageResponse = await messageJson.json();
         return messageResponse;
     },
+    changeMessagePriority: async ({item_id, priority})=>{
+        const url = new URL(window.location.href);
+        const path = url.pathname;
+        const fb_id = path.split('/')[2];
+        const messageJson = await fetch('/api/changeMessagePriority',{
+            method: 'post',
+            headers:{
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({item_id, priority, fb_id})
+        });
+        const messageResponse = await messageJson.json();
+        return messageResponse;
+    },
     accountMessages: async ()=>{
         const url = new URL(window.location.href);
         const path = url.pathname;
@@ -1370,9 +1384,26 @@ const controllers = {
                     const message = textarea.value;
                     const userName = window.localStorage.getItem('userName');
                     if(message && userName){
-                        controllers.singleMessageNew({sent_from:'me',message:message,type:'text',sending:true,mmc_user:userName});
-                        await dataLoads.sendMessage({message,userName});
-                        textarea.value = '';
+                        controllers.popup({
+                            state:true,
+                            content: popups.loader(),
+                        });
+                        const response = await dataLoads.sendMessage({message,userName});
+                        if(response.status=='success'){
+                            // const chat = document.getElementById('singleMessageChat');
+                            // const messageBox = components.singleMessageOne({sent_from:'me',message:message,type:'text',mmc_user:userName,status:'unsent'});
+                            // chat.append(messageBox);
+                            controllers.notify({data:"Message Sent" ,type:'success'});
+                            textarea.value = '';
+                        }else{
+                            // controllers.singleMessageNew({sent_from:'me',message:message,type:'text',sending:true,mmc_user:userName,status:'unsent'});
+                            controllers.notify({data:response.message ,type:'danger'});
+                        }
+                        
+                        controllers.popup({
+                            state:false,
+                            content: popups.loader(),
+                        });
                     }else if(!userName){
                         controllers.notify({data:'Please! Refresh the page. Cannot recongnize you!!',type:'danger'});
                     }
@@ -2292,9 +2323,16 @@ const components = {
             }
         }
         const messageContent = document.createElement('div');
+        messageBox.append(messageContent);
         messageContent.classList = 'p-10px bg-grey font-sub w-80p border-radius-5px box-shadow-inset position-relative';
         if(message.type=='text'){
             messageContent.innerText = message.message;
+            // field reps unsent message
+            if(message.status == 'unsent'){
+                
+                const prioritySelecttionBox = components.prioritySelecttion(message);
+                messageContent.append(prioritySelecttionBox);
+            }
         }else if(message.type=='file'){
             const file = document.createElement('a');
             file.href = message.message;
@@ -2339,8 +2377,37 @@ const components = {
             });
             messageContent.append(image, sendButton);
         }
-        messageBox.append(messageContent);
         return messageBox;
+    },
+    prioritySelecttion: ({item_id,priority=1})=>{
+        const prioritySelecttionBox = document.createElement('div');
+        prioritySelecttionBox.classList = 'h-50px box-shadow-inset mt-10px d-flex justify-content-evenly align-items-center';
+        const priorityColors = ['green','yellow','red'];
+        for(i=1;i<=3;i++){
+            const priorityBox = document.createElement('div');
+            priorityBox.classList = `h-30px w-30px border-round cursor-pointer box-shadow-inset-${priorityColors[i-1]}`;
+            priorityBox.setAttribute('data-priority', `${i}`);
+            if(i==priority){
+                priorityBox.classList.add(`bg-${priorityColors[i-1]}`);
+            }
+            priorityBox.addEventListener('click', async()=>{
+                // console.log(id);
+                const response = await dataLoads.changeMessagePriority({item_id,priority:(priorityBox.getAttribute('data-priority')*1)});
+                if(response.status == 'error'){
+                    controllers.notify({data:response.message,type:'danger'});
+                    return;
+                }
+                const allboxes = prioritySelecttionBox.querySelectorAll('[data-priority]');
+                for(box of allboxes){
+                    const priority = box.getAttribute('data-priority')*1;
+                    box.classList.remove(`bg-${priorityColors[priority-1]}`);
+                }
+                priorityBox.classList.add(`bg-${priorityColors[(priorityBox.getAttribute('data-priority')*1)-1]}`);
+                controllers.notify({data:"Priority Updated",type:'success'});
+            }); 
+            prioritySelecttionBox.append(priorityBox);
+        }
+        return prioritySelecttionBox;
     },
     archiveOptions: ({item_id,fb_id})=>{
         console.log(fb_id);

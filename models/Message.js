@@ -40,6 +40,11 @@ const Message = db.define('message',{
         type: sequelize.STRING(15),
         allowNull: false
     },
+    priority: {
+        type: sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 1
+    }
 },{
     timestamps: false,
     // freezeTableName: true,

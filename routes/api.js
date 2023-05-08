@@ -142,12 +142,15 @@ router.post('/singleItemMessage', async (req, res) => {
                 item_id: item_id
             },
             attributes: [
+                'id',
                 'message',
                 'sent_from',
                 'mmc_user',
                 'timestamp',
                 'status',
-                'type'
+                'type',
+                'priority',
+                'item_id'
             ],
             order: [
                 ['id', 'ASC']
@@ -212,6 +215,26 @@ router.post('/singleItemMessage', async (req, res) => {
         }
     }
 });
+router.post('/changeMessagePriority', async (req, res) => {
+    const item_id = req.fields.item_id;
+    const priority = req.fields.priority;
+    const fb_id = req.fields.fb_id;
+    try{
+        await Message.update({
+            priority: priority
+        },{
+            where: {
+                item_id: item_id,
+                fb_id: fb_id
+            }
+        });
+    }catch(e){
+        console.log(e);
+        res.json({status: 'error', message: "Having issues updating priority"});
+        return;
+    }
+    res.json({status: 'success'});
+});
 // messageScript-SOCKET
 router.post('/messageScript', async (req, res) => {
     const scripts = await Script.findAll({
@@ -242,6 +265,16 @@ router.post('/sendMessage', async (req, res) => {
         status,
         type
     };
+    const unsentMessageCount = await Message.count({
+        where: {
+            item_id: item_id,
+            status: 'unsent'
+        }
+    });
+    if(unsentMessageCount > 0){
+        res.json({status:'error',message: 'This item already has unsent message!'});
+        return;
+    }
     const item = await Item.findOne({where: {item_id: item_id}});
     if(item){
         await Action.create({
@@ -253,25 +286,15 @@ router.post('/sendMessage', async (req, res) => {
         await Message.create(messageData);
         webSocket.to(`fb_id_${fb_id}`).emit('response', {
             action: 'notifyLastMessageFromMe',
-            data:{
-                item_id,
-                fb_id
-            }
+            data:messageData
         });
         webSocket.to(`item_id_${item_id}`).emit('response', {
             action: 'newMessageFromMe',
-            data:{
-                fb_id,
-                item_id,
-                message,
-                sent_from,
-                mmc_user,
-                type
-            }
+            data:messageData
         });
     }
     
-    res.json({});
+    res.json({status:'success'});
 });
 router.post('/getActivities', async (req, res) => {
     const fieldRepActivities = await Action.findAll({

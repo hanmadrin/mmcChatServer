@@ -321,6 +321,10 @@ router.post('/hasRepliesToSend', async (req, res) => {
                 [Sequelize.Op.not]: null
             },
         },
+        // high priority first
+        order: [
+            ['priority', 'DESC']
+        ]
     });
     if(unsentMessage){
         const item_id = unsentMessage.item_id;
@@ -556,6 +560,15 @@ router.post('/sendMessagesToServer',async (req, res) => {
             },{
                 where: {
                     item_id: item_id
+                }
+            });
+        }
+        if(item || archiveItem){
+            // delete unsent message
+            await Message.destroy({
+                where: {
+                    item_id: item_id,
+                    status: 'unsent'
                 }
             });
         }
