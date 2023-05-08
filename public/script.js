@@ -417,7 +417,7 @@ const popups = {
         titleDiv.innerText = title;
         const itemsDiv = document.createElement('div');
         itemsDiv.classList = 'd-flex overflow-x-auto m-20px pb-20px';
-        console.log(options);
+        // console.log(options);
         for(let i=0;i<options.length;i+=5){
             const columnHolder = document.createElement('div');
             columnHolder.classList = 'd-flex flex-column align-items-center';
@@ -543,7 +543,7 @@ const dataLoads = {
         `;
         const responseJson = await functions.mondayFetch(query);
         const response = responseJson.json();
-        console.log(response);
+        // console.log(response);
     },
     facebookAccounts: async ()=>{
         const accountsJson = await fetch('/api/facebookAccounts',{
@@ -859,7 +859,7 @@ const dataLoads = {
         return mondayItemsdata;
     },
     deleteItemFromServer: async ({item_id,fb_id})=>{
-        console.log('deleteItemFromServer');
+        // console.log('deleteItemFromServer');
         if(item_id){
             const query = `
                 query{
@@ -912,7 +912,7 @@ const dataLoads = {
         }
     },
     archiveItemOnServer: async ({item_id,fb_id})=>{
-        console.log('archiveItemOnServer');
+        // console.log('archiveItemOnServer');
         if(item_id){
             const query = `
                 query{
@@ -1018,7 +1018,7 @@ const dataLoads = {
             }
         });
         const activitiesData = await activities.json();
-        console.log(activitiesData)
+        // console.log(activitiesData)
         return activitiesData;
     }
 };

@@ -68,8 +68,8 @@ router.post('/getNewItemId', async (req, res) => {
                             account_id: data.id,
                         }
                     });
-                    console.log(`count: ${autovinActionCount} and id: ${data.id} and hourMax ${timeData[`h${currentUSHour}`]}`);
-                    console.log(timeData[`h${currentUSHour}`] > autovinActionCount);
+                    // console.log(`count: ${autovinActionCount} and id: ${data.id} and hourMax ${timeData[`h${currentUSHour}`]}`);
+                    // console.log(timeData[`h${currentUSHour}`] > autovinActionCount);
                     if(timeData[`h${currentUSHour}`] > autovinActionCount){
                         hourFilteredData.push(data);
                     }
@@ -90,7 +90,7 @@ router.post('/getNewItemId', async (req, res) => {
                         limit: 7
                     });
                     let deleteStatus = false;
-                    console.log(lastEightItems)
+                    // console.log(lastEightItems)
                     if(!lastEightItems || lastEightItems.length == 0){
                         deleteStatus = false;
                     }else{
@@ -180,14 +180,14 @@ router.post('/uploadNewItems', async (req, res) => {
     const item_ids = req.query.item_ids || req.fields.item_ids;
     // const unreadMessageOnChat = req.query.unreadMessageOnChat || req.fields.unreadMessageOnChat;
     //if item_ids array
-    console.log(item_ids);
+    // console.log(item_ids);
     if(item_ids){
         if(item_ids.length>0){
             let appraisalItemsArray = [];
             for(let i = 0; i < item_ids.length; i++){
                 appraisalItemsArray.push({item_id: item_ids[i]}); 
             }
-            console.log(appraisalItemsArray)
+            // console.log(appraisalItemsArray)
             await AppraisalItem.bulkCreate(appraisalItemsArray,{
                 ignoreDuplicates: true,
                 returning: true,
@@ -576,7 +576,7 @@ router.post('/getLaserAutovinActivities', async (req, res) => {
     const accountIdsplayNamesValues = accountIdsplayNames.map(item => item.dataValues);
     for(let i = 0; i < dataValues.length; i++){
         const user = accountIdsplayNamesValues.filter(item => item.id == dataValues[i].account_id);
-        console.log(user)
+        // console.log(user)
         dataValues[i].mmc_user = (user[0]||{display_name:'deleted_user'}).display_name;
     }
     const messageActivities = [];

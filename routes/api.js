@@ -229,7 +229,7 @@ router.post('/changeMessagePriority', async (req, res) => {
             }
         });
     }catch(e){
-        console.log(e);
+        // console.log(e);
         res.json({status: 'error', message: "Having issues updating priority"});
         return;
     }
