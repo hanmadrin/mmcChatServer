@@ -2311,6 +2311,7 @@ const components = {
         return loaderCircle;
     },
     singleMessageOne: (message)=>{
+        console.log(message)
         const messageBox = document.createElement('div');
         messageBox.classList = 'p-10px d-flex';
         if(message.sent_from=='seller'){
@@ -2325,8 +2326,16 @@ const components = {
         const messageContent = document.createElement('div');
         messageBox.append(messageContent);
         messageContent.classList = 'p-10px bg-grey font-sub w-80p border-radius-5px box-shadow-inset position-relative';
+        
+        const timebox = document.createElement('div');
+        timebox.classList = 'font-10px text-grey box-shadow-inset p-5px mb-10px';
+        timebox.innerText = new Date(parseInt(message.timestamp)).toLocaleString();
+        messageContent.append(timebox);
+        
         if(message.type=='text'){
-            messageContent.innerText = message.message;
+            const messageText = document.createElement('span');
+            messageText.innerText = message.message;
+            messageContent.append(messageText);
             // field reps unsent message
             if(message.status == 'unsent'){
                 
