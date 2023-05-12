@@ -1150,7 +1150,7 @@ const controllers = {
             const filterMessageOptions = [
                 {value: 'all', text: "All Messages"},
                 {value: "new", text: "New Messages"},
-                {value: "unanswered", text: "Unasnwered Messages"},
+                {value: "unanswered", text: "Unanswered Messages"},
                 {value: "answered", text: "Answered Messages"},
             ];
             filterMessageOptions.forEach((option)=>{
