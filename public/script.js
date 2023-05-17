@@ -2863,6 +2863,9 @@ const pages = {
             'totalSentInDay': 'Total Sent in Day',
             'quedFirstMessage': 'Qued First Message',
             'quedReplies': 'Qued Replies',
+            'redQuedReplies': 'Red',
+            'yellowQuedReplies': 'Yellow',
+            'greenQuedReplies': 'Green',
         }
         const dataSetKeys = Object.keys(dataSet);
         const table = document.createElement('table');

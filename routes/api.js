@@ -512,71 +512,15 @@ router.post('/getDashBoardData', async (req, res) => {
         temp.quedReplies = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NOT NULL AND status = 'unsent'`);
         temp.quedReplies = temp.quedReplies[0][0].id;
 
-        // temp.repliesInHour = await Message.count({
-        //     where: {
-        //         fb_id: items[i].fb_id,
-        //         status: 'done',
-        //         sent_from: 'me',
-        //         mmc_user: {
-        //             [Sequelize.Op.not]: null
-        //         },
-        //         timestamp: {
-        //             [Sequelize.Op.gt]: new Date().getTime() - 3600000
-        //         }
-        //     }
-        // });
-        // temp.repliesInday = await Message.count({
-        //     where: {
-        //         fb_id: items[i].fb_id,
-        //         status: 'done',
-        //         sent_from: 'me',
-        //         mmc_user: {
-        //             [Sequelize.Op.not]: null
-        //         },
-        //         timestamp: {
-        //             [Sequelize.Op.gt]: new Date().getTime() - (3600000*24)
-        //         }
-        //     }
-        // });
+        temp.redQuedReplies = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NOT NULL AND status = 'unsent' AND priority=3`);
+        temp.redQuedReplies = temp.redQuedReplies[0][0].id;
 
-        // temp.totalSentInHour = await Message.count({
-        //     where: {
-        //         fb_id: items[i].fb_id,
-        //         status: 'done',
-        //         sent_from: 'me',
-        //         timestamp: {
-        //             [Sequelize.Op.gt]: new Date().getTime() - (3600000)
-        //         } 
-        //     }
-        // });
-        // temp.totalSentInDay = await Message.count({
-        //     where: {
-        //         fb_id: items[i].fb_id,
-        //         status: 'done',
-        //         sent_from: 'me',
-        //         timestamp: {
-        //             [Sequelize.Op.gt]: new Date().getTime() - (3600000*24)
-        //         } 
-        //     }
-        // });
-        // temp.quedFirstMessage = await Message.count({
-        //     where: {
-        //         fb_id: items[i].fb_id,
-        //         status: 'unsent',
-        //         sent_from: 'me',
-        //         mmc_user: null
-        //     }
-        // });
-        // temp.quedReplies = await Message.count({
-        //     where: {
-        //         fb_id: items[i].fb_id,
-        //         status: 'unsent',
-        //         sent_from: 'me',
-        //         mmc_user: {
-        //             [Sequelize.Op.not]: null
-        //         }
-        //     }
-        // });
+        temp.yellowQuedReplies = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NOT NULL AND status = 'unsent' AND priority=2`);
+        temp.yellowQuedReplies = temp.yellowQuedReplies[0][0].id;
+
+        temp.greenQuedReplies = await sequelize.query(`SELECT COUNT(id) as id FROM messages WHERE sent_from = 'me' AND fb_id = '${items[i].fb_id}' AND mmc_user IS NOT NULL AND status = 'unsent' AND priority=1`);
+        temp.greenQuedReplies = temp.greenQuedReplies[0][0].id;
+
         data.push(temp);
     }
     
