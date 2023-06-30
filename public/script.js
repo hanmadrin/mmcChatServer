@@ -205,6 +205,12 @@ const globals = {
                     title: "List Code",
                     type: "text",
                     editable: false
+                },
+                //  Mileage/Year
+                "text61":{
+                    title: "Mi/Yr",
+                    type: "text",
+                    editable: false
                 }
             }
         }
