@@ -12,6 +12,57 @@ const ArchiveItem = require('../models/ArchiveItem');
 const ArchiveMessage = require('../models/ArchiveMessage');
 const Account = require('../models/Account');
 const Action = require('../models/Action');
+const Meta = require('../models/Meta');
+router.post('/getHealthMeta', async (req, res) => {
+    const key = req.fields.key;
+    console.log(key)
+    const meta = await Meta.findOne({
+        where: {
+            key: 'HEALTH_' + key
+        }
+    });
+    res.json(meta.value);
+});
+router.post('/setHealthMeta', async (req, res) => {
+    try{
+        const key = req.fields.key;
+        const value = req.fields.value;
+        const meta = await Meta.findOne({
+            where: {
+                key: 'HEALTH_' + key
+            }
+        });
+        if(!meta){
+            await Meta.create({
+                key: 'HEALTH_' + key,
+                value: value
+            });
+            res.json({
+                status: 'success',
+                message: 'Meta created!'
+            });
+            return;
+        }else{
+            await Meta.update({
+                value: value
+            }, {
+                where: {
+                    key: 'HEALTH_' + key
+                }
+            });
+            res.json({
+                status: 'success',
+                message: 'Meta updated!'
+            });
+            return;
+        }
+    }catch(err){
+        res.json({
+            status: 'danger',
+            message: 'Meta update failed!' 
+        });
+    }
+});
 router.post('/collectRawItems', async (req, res) => {
 
     res.sendStatus(200);
@@ -465,7 +516,12 @@ router.post('/getDashBoardData', async (req, res) => {
         let temp= {};
         temp.fb_id = items[i].fb_id;
         temp.name = items[i].fb_user_name;
-        temp.health = '';
+        const meta = await Meta.findOne({
+            where: {
+                key: 'HEALTH_' + items[i].fb_user_name
+            }
+        });
+        temp.health = meta==null?'':meta.value;
         temp.sellerReplies = (await Item.findAll({
             where: {
                 fb_id: items[i].fb_id,

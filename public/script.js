@@ -2897,6 +2897,28 @@ const pages = {
                     a.href = `/account/${singleUser.fb_id}/?filterMessage=new`;
                     a.innerText = singleUser[key];
                     td.append(a);
+                }else if(key=='health'){
+                    const value = singleUser[key];
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = value;
+                    input.classList = 'w-100px h-100p border-0 bg-transparent text-white';
+                    input.addEventListener('change', async(e)=>{
+                        // setHealthMeta
+                        const value = input.value;
+                        const key = singleUser.name;
+                        const response = await fetch('/api/setHealthMeta', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({key, value})
+                        });
+                        const data = await response.json();
+                        // notify
+                        controllers.notify({data: data.message, type: data.status});
+                    })
+                    td.append(input);
                 }else{
                     td.innerText = singleUser[key];
                 }
@@ -3272,6 +3294,7 @@ globals.socket.on('response', async(response)=>{
         break;
     }
 });
+
 
 
 
