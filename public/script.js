@@ -1933,6 +1933,7 @@ const controllers = {
         controlHolder.classList = 'w-400px h-100p  flex-shrink-0';
         const controlBoard = document.createElement('div');
         controlBoard.classList = 'w-100p-n40px h-100p-n40px m-20px box-shadow-inset overflow-y-auto';
+        controlBoard.setAttribute('data-control','holder');
         const header = document.createElement('div');
         header.classList = 'd-flex justify-content-center box-shadow-inset text-white text-center align-items-center position-sticky top-0 h-40px bg-dark zindex-1';
         const deviceId = document.createElement('div');
@@ -1987,10 +1988,68 @@ const controllers = {
         const readMessageDaysInput = readMessageDays.querySelector('input');
         textEventListener(readMessageDaysInput,updateValue);
 
-        
+        const accountHourSettings = (()=>{
+            const mainHolder = document.createElement('div');
+            mainHolder.classList = 'w-100p pt-10px box-shadow-inset';
+            const regularButton = document.createElement('button');
+            regularButton.classList = 'h-30px bg-secondary text-white border-radius-5px px-15px';
+            regularButton.innerText = 'Regular';
+            regularButton.setAttribute('data-type','regular');
+            const weekendButton = document.createElement('button');
+            weekendButton.classList = 'h-30px bg-secondary text-white border-radius-5px px-15px';
+            weekendButton.innerText = 'Weekend';
+            weekendButton.setAttribute('data-type','weekend');
+            const buttonHolder = document.createElement('div');
+            buttonHolder.classList = 'w-100p d-flex justify-content-around py-10px';
+            buttonHolder.append(regularButton,weekendButton);
+            const title = document.createElement('div');
+            title.classList = 'w-100p text-center text-white fs-12px';
+            title.innerText = 'Set Timeline';
+            buttonHolder.append(regularButton,weekendButton);
+            mainHolder.append(title,buttonHolder);
+
+            const workHours = {
+                'regular':[9,10,11,12,16,17,18],
+                'weekend':[10,11,12,15,16],
+                'all':[9,10,11,12,13,14,15,16,17,18],
+            }
+            const changeInputValues = (e)=>{
+                const element = e.target;
+                const commonHour = 10;
+                const type = element.getAttribute('data-type');
+                const mainHolder = element.closest('[data-control="holder"]');
+                const commonHourTime = {
+                    n: mainHolder.querySelector(`[name="h${commonHour}_n"]`).value,
+                    r: mainHolder.querySelector(`[name="h${commonHour}_r"]`).value,
+                }
+                const validHours = workHours[type];
+                const allHours = workHours['all'];
+                for(let i=0;i<allHours.length;i++){
+                    const hour = allHours[i];
+                    const isValidHour = validHours.includes(hour);
+                    const newMessageTime = mainHolder.querySelector(`[name="h${hour}_n"]`);
+                    const replyMessageTime = mainHolder.querySelector(`[name="h${hour}_r"]`);
+                    const hourTime = {
+                        n: newMessageTime.value,
+                        r: replyMessageTime.value,
+                    }
+                    if(hourTime.n != commonHourTime.n || !isValidHour){
+                        newMessageTime.value = isValidHour?commonHourTime.n:0;
+                        newMessageTime.dispatchEvent(new Event('change'));
+                    }
+                    if(hourTime.r != commonHourTime.r || !isValidHour){
+                        replyMessageTime.value = isValidHour?commonHourTime.r:0;
+                        replyMessageTime.dispatchEvent(new Event('change'));
+                    }
+                }
+            }
+            regularButton.addEventListener('click',changeInputValues)
+            weekendButton.addEventListener('click',changeInputValues)
+            return mainHolder;
+        })();
 
         
-        controlBoard.append(header,mainSwitch,debugSwitch,accountName,readMessageLimit,readMessageDays);
+        controlBoard.append(header,mainSwitch,debugSwitch,accountHourSettings,accountName,readMessageLimit,readMessageDays);
         const updateHourlyValue = (e)=>{
             const keys = e.target.name.split('_');
             const hourKey = keys[0];
