@@ -2450,6 +2450,15 @@ const components = {
                 }
             });
             messageContent.append(image, sendButton);
+        }else if(message.type=='video'){
+            const url = message.message;
+            const video = document.createElement('video');
+            video.classList = 'w-100p';
+            video.src = url;
+            video.controls = true;
+            // playinline
+            video.setAttribute('playsinline', '');
+            messageContent.append(video);
         }
         return messageBox;
     },
@@ -3321,7 +3330,6 @@ const view = async()=>{
     }else{
         await pages.notFound();
     }
-    
 };
 
 (async ()=>{
