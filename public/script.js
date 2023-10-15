@@ -89,8 +89,8 @@ const globals = {
                 // Date
                 "date4": {
                     title: "Date",
-                    type: "text",
-                    editable: false
+                    type: "date",
+                    editable: true
                 },
                 // Vin#
                 "text6":{
@@ -414,7 +414,7 @@ const popups = {
     },
     chooseStatus: ({title, options, callback})=>{
         const content = document.createElement('div');
-        content.classList = 'h-250px maxw-500px bg-dark box-shadow-dark border-radius-10px px-5px d-flex flex-column';
+        content.classList = 'maxw-1000px bg-dark box-shadow-dark border-radius-10px px-5px d-flex flex-column';
         content.addEventListener('click', (e)=>{
             e.stopPropagation();
         });
@@ -422,12 +422,12 @@ const popups = {
         titleDiv.classList = 'font-header text-center text-white w-100p py-10px mt-10px';
         titleDiv.innerText = title;
         const itemsDiv = document.createElement('div');
-        itemsDiv.classList = 'd-flex overflow-x-auto m-20px pb-20px';
+        itemsDiv.classList = 'd-flex overflow-x-auto m-20px pb-20px thick-scrollbar';
         // console.log(options);
-        for(let i=0;i<options.length;i+=5){
+        for(let i=0;i<options.length;i+=11){
             const columnHolder = document.createElement('div');
             columnHolder.classList = 'd-flex flex-column align-items-center';
-            for(let j=i;j<i+5;j++){
+            for(let j=i;j<i+11;j++){
                 if(options[j]){
                     const itemButton = document.createElement('button');
                     itemButton.classList = 'btn cursor-pointer border-radius-5px bg-dark text-white box-shadow-inset font-normal border-0 p-10px m-5px w-200px position-relative white-space-nowrap overflow-hidden text-overflow-ellipsis';
@@ -1583,6 +1583,14 @@ const controllers = {
                                 })
                             });
                             columnBox.append(hiddenInput,statusBox);
+                        }else if(storedValue.type == 'date'){
+                            // editable date
+                            const input = document.createElement('input');
+                            input.classList = 'text-white bg-dark font-sub p-5px w-200px h-30px white-space-nowrap overflow-hidden text-overflow-ellipsis border-0 box-shadow-inset';
+                            input.type = 'date';
+                            input.value = `${column.text}`;
+                            input.onchange = updateValue;
+                            columnBox.append(input);
                         }else{
                             // text with input
                             const input = document.createElement('input');
@@ -1696,6 +1704,7 @@ const controllers = {
                             }
                             
                         }else{
+                            
                             columnValue.innerText = column.text;
                         }
                         columnBox.append(columnValue);

@@ -2245,3 +2245,11 @@ body {
 .file-icon[data-type=png] {
   background: #f4b400;
 }
+
+
+/* .thick-scrollbar{
+  scrollbar-width: 
+} */
+.thick-scrollbar::-webkit-scrollbar {
+  width: 20px;
+}
