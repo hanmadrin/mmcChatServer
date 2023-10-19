@@ -14,6 +14,17 @@ const Script = db.define('script',{
     content: {
         type: sequelize.STRING(1000),
         allowNull: false
+    },
+    options: {
+        // JSON DATA type
+        type: sequelize.STRING(10000),
+        allowNull: false,
+        get: function() {
+            return JSON.parse(this.getDataValue('options'));
+        },
+        set: function(val) {
+            return this.setDataValue('options', JSON.stringify(val));
+        }
     }
 },{
     timestamps: false,

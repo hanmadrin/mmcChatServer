@@ -290,8 +290,10 @@ router.post('/changeMessagePriority', async (req, res) => {
 router.post('/messageScript', async (req, res) => {
     const scripts = await Script.findAll({
         attributes: [
+            'id',
             'content',
-            'code'
+            'code',
+            'options'
         ]
     });
     res.json(scripts);

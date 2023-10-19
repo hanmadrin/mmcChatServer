@@ -217,7 +217,7 @@ const globals = {
     },
 };
 
-// const ;
+const db = {};
 const complexes = {
     validUser: async ()=>{
         // return true;
@@ -596,6 +596,7 @@ const dataLoads = {
                         email,
                         photo_small
                     },
+                    created_at,
                     text_body,
                     assets {
                         public_url
@@ -758,6 +759,7 @@ const dataLoads = {
                             updates{
                                 body,
                                 text_body,
+                                created_at,
                                 assets {
                                     public_url
                                 }
@@ -1052,7 +1054,7 @@ const controllers = {
 
         const messageScriptSection = document.createElement('div');
         messageScriptSection.id = 'messageScriptSection';
-        messageScriptSection.classList = 'minw-200px w-100p h-100vh box-shadow-inset-right overflow-y-auto';
+        messageScriptSection.classList = 'minw-300px w-100p h-100vh box-shadow-inset-right overflow-y-auto';
         
 
         const mondayItemSection = document.createElement('div');
@@ -1449,6 +1451,7 @@ const controllers = {
         }
     },
     messageScript: (scripts)=>{
+        console.log(scripts)
         const messageScriptSection = document.getElementById('messageScriptSection');
         if(!scripts){
             const noScript = document.createElement('div');
@@ -1496,6 +1499,7 @@ const controllers = {
             mondayItemSection.replaceChildren(noItem);
         }else{
             console.log(itemData);
+            db.mondayItem = itemData;
             const header = document.createElement('div');
             header.classList = 'position-sticky top-0 bg-dark box-shadow-inset-bottom d-flex justify-content-between align-items-center w-100p';
             const content = document.createElement('div');
@@ -1547,6 +1551,7 @@ const controllers = {
                                 controllers.notify({data: 'Item update Failed', type: 'warning'});
                             }else{
                                 itemData = updateData.data.change_simple_column_value;
+                                db.mondayItem = itemData;
                                 controllers.notify({data: 'Item Successfully Updated', type: 'primary'});
                             }
                         };
@@ -1721,20 +1726,26 @@ const controllers = {
                 const updateBox = document.createElement('div');
                 updateBox.classList = 'bg-dark box-shadow-inset h-100p-n120px overflow-y-auto w-100p';
                 for(const update of updates){
-                    // console.log(update);
+                    console.log(update);
                     const creator_name = update.creator.name || update.creator.email;
                     const creator_photo = update.creator.photo_small;
                     const singleUpdate = document.createElement('div');
-                    singleUpdate.classList = 'box-shadow-inset p-10px mx-10px my-20px border-radius-5px bg-dark';
+                    singleUpdate.classList = 'box-shadow-inset p-10px mx-10px my-20px border-radius-5px bg-dark ';
                     const updateHeader = document.createElement('div');
-                    updateHeader.classList = 'd-flex align-items-center p-10px';
+                    updateHeader.classList = 'd-flex justify-content-between align-items-center p-10px box-shadow-inset';
                     const creatorPhoto = document.createElement('img');
                     creatorPhoto.classList = 'w-30px h-30px border-round';
                     creatorPhoto.src = creator_photo;
                     const creatorName = document.createElement('div');
                     creatorName.classList = 'text-white font-sub p-5px';
                     creatorName.innerText = creator_name;
-                    updateHeader.append(creatorPhoto, creatorName);
+                    const headerUserPart = document.createElement('div');
+                    headerUserPart.classList = 'd-flex align-items-center';
+                    headerUserPart.append(creatorPhoto, creatorName);
+                    const headerTimePart = document.createElement('div');
+                    headerTimePart.classList = 'text-white font-sub p-5px box-shadow-inset';
+                    headerTimePart.innerText = (new Date(update.created_at).toLocaleString());
+                    updateHeader.append(headerUserPart, headerTimePart);
                     const updateBody = document.createElement('div');
                     if(update.text_body){
                         const textBody = document.createElement('div');
