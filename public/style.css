@@ -1794,7 +1794,12 @@ body {
 }
 
 
-
+.top-60px{
+  top: 60px;
+}
+.top-58px{
+  top:58px;
+}
 .top-0 {
   top: 0
 }
@@ -2252,4 +2257,13 @@ body {
 } */
 .thick-scrollbar::-webkit-scrollbar {
   width: 20px;
+}
+.show-button-on-hover button{
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.2s;
+}
+.show-button-on-hover:hover button{
+  opacity: 1;
+  pointer-events: all;
 }

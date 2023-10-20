@@ -739,6 +739,39 @@ const dataLoads = {
             return script;
         } 
     },
+    deleteScript: async ({id})=>{
+        const scriptJson = await fetch('/api/deleteScript',{
+            method: 'post',
+            headers:{
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({id})
+        });
+        const script = await scriptJson.json();
+        return script;
+    },
+    addScript: async ({script})=>{
+        const scriptJson = await fetch('/api/addScript',{
+            method: 'post',
+            headers:{
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({script})
+        });
+        const scriptResponse = await scriptJson.json();
+        return scriptResponse;
+    },
+    updateScript: async ({script})=>{
+        const scriptJson = await fetch('/api/updateScript',{
+            method: 'post',
+            headers:{
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({script})
+        });
+        const scriptResponse = await scriptJson.json();
+        return scriptResponse;
+    },
     mondayItem: async ()=>{
         const url = new URL(window.location.href);
         const item_id = url.searchParams.get('item_id');
@@ -1451,43 +1484,305 @@ const controllers = {
         }
     },
     messageScript: (scripts)=>{
-        console.log(scripts)
-        const messageScriptSection = document.getElementById('messageScriptSection');
-        if(!scripts){
-            const noScript = document.createElement('div');
-            noScript.classList = 'w-100p h-100p d-flex flex-column align-items-center justify-content-center text-white';
-            noScript.innerText = 'No script found';
-            messageScriptSection.replaceChildren(noScript);
-        }else{
+
+        const scriptsManipulation = (scripts,groupName)=>{
+            const messageScriptSection = document.getElementById('messageScriptSection');
+            if(!scripts){
+                const noScript = document.createElement('div');
+                noScript.classList = 'w-100p h-100p d-flex flex-column align-items-center justify-content-center text-white';
+                noScript.innerText = 'No script found';
+                messageScriptSection.replaceChildren(noScript);
+                return;
+            }
+            
+            messageScriptSection.replaceChildren();
             const header = document.createElement('div');
-            header.classList = 'p-10px position-sticky top-0 bg-dark box-shadow-inset-bottom d-flex justify-content-between align-items-center mx-5px';
+            header.classList = 'p-10px position-sticky top-0 bg-dark box-shadow-inset-bottom mx-5px zindex-2';
             const title = document.createElement('div');
             title.classList = 'text-white font-header p-10px text-center w-100p';
             title.innerText = 'Message Scripts';
+            
             header.append(title);
-            messageScriptSection.replaceChildren(header);
-            for(const script of scripts){
-                const scriptBox = document.createElement('div');
-                const scriptTitle = document.createElement('div');
-                const scriptContent = document.createElement('div');
-    
-                scriptBox.classList = 'p-10px bg-dark border-radius-5px my-10px';
-                scriptTitle.classList = 'text-white font-sub box-shadow-inset p-5px w-50p white-space-nowrap overflow-hidden text-overflow-ellipsis';
-                scriptContent.classList = 'text-white font-sub box-shadow-inset p-10px  cursor-pointer break-word';
-                scriptContent.addEventListener('click', (e)=>{
-                    const message = e.target.innerText;
-                    const textarea = document.querySelector('#messagInputArea');
-                    textarea.value = message;
-                    textarea.focus();
-                });
-                scriptTitle.innerText = script.code;
-                
-                
-                scriptContent.innerText = script.content;
-                scriptBox.append(scriptTitle, scriptContent);
-                messageScriptSection.append(scriptBox);
+
+            messageScriptSection.append(header);
+
+            const groupBox = ()=>{
+                // scripts of script 
+                // script.options.group
+                const groups = [...new Set(scripts.map(script=>script.options.group))];
+                const holder = document.createElement('div');
+                // flex grid
+                holder.classList = 'd-flex flex-wrap position-sticky top-58px zindex-3 bg-dark box-shadow-inset p-5px';
+
+                for(const group of groups){
+                    const groupBox = document.createElement('div');
+                    groupBox.classList = 'border-radius-10px box-shadow-inset bg-secondary btn p-10px m-5px cursor-pointer border-radius-5px';
+                    const groupTitle = document.createElement('div');
+                    groupTitle.classList = 'font-sub ';
+                    if(group==groupName){
+                        groupTitle.classList.add('text-dark')
+                    }else{
+                        groupTitle.classList.add('text-white')
+                    }
+                    groupTitle.innerText = group;
+                    groupBox.append(groupTitle);
+                    groupBox.addEventListener('click', ()=>{
+                        scriptsManipulation(scripts,groupName==groupBox.innerText?null:groupBox.innerText);
+
+                    });
+                    holder.append(groupBox);
+                }
+                return holder;
+            };
+            messageScriptSection.append(groupBox());
+            const addNew = ()=>{
+                const holder = document.createElement('div');
+                holder.classList = "w-100p py-10px text-center";
+                const addButton = document.createElement('button');
+                addButton.classList = "bg-dark text-success border-0 box-shadow-inset btn p-10px";
+                addButton.onclick = ()=>{
+                    holder.replaceWith(singleScript({
+                        script:{
+                            code:'',
+                            content: '',
+                            options:{
+                                group: '',
+                                name: '',
+                            }
+                        },
+                        editing: true,
+                        adding:true
+                    }))
+                };
+                const addIcon = document.createElement('div');
+                addIcon.classList = "line-height-1"
+                addIcon.innerHTML = 'Add New Script'
+                addButton.append(addIcon);
+                holder.append(addButton);
+
+                return holder;
+            };
+            if(groupName==null){
+                messageScriptSection.append(addNew());
             }
-        }
+            const inputWithText = ({height,value, text, type,tag})=>{
+                const main = document.createElement('div');
+                main.classList = 'w-100p d-flex flex-column justify-content-end';
+                main.style.height = `${height}px`;
+                const inputHolder = document.createElement('div');
+                inputHolder.classList = 'w-100p position-relative';
+                inputHolder.style.height = `${height-20}px`;
+                const input = document.createElement(tag||'input');
+                input.classList = 'w-100p h-100p-n10px box-shadow-inset border-0 focus-outline-none color-white px-5px pt-10px bg-transparent text-white resize-none';
+                input.type = 'text';
+                input.setAttribute('data-type', type);
+                input.name = name;
+                input.style.fontSize = `${16}px`;
+                input.value = value;
+                const label = document.createElement('div');
+                label.classList = 'position-absolute text-dark font-sub box-shadow-inset w-max-content w-max-80p white-space-nowrap overflow-hidden text-overflow-ellipsis px-5px';
+                label.style.backgroundColor = 'rgb(255, 255, 255)';
+                label.style.top = `-${10}px`;
+                label.style.left = '0px';
+                label.style.fontSize = `${15}px`;
+                label.style.lineHeight = `${18}px`;
+                label.style.height = `${18}px`;
+                label.innerText = text;
+                inputHolder.append(input,label);
+                main.append(inputHolder);
+                return main;
+            };
+            const singleScript = ({script,editing,adding})=>{
+                let updatedScript = JSON.parse(JSON.stringify(script));
+                const checkScript = ()=>{
+                    if(JSON.stringify(updatedScript)!=JSON.stringify(script)){
+                        saveButton.disabled = false; 
+                        saveButton.classList.remove('cursor-not-allowed','bg-secondary');
+                        saveButton.classList.add('cursor-pointer','bg-primary');
+        
+                    }else{
+                        saveButton.disabled = true; 
+                        saveButton.classList.add('cursor-not-allowed','bg-secondary');
+                        saveButton.classList.remove('cursor-pointer','bg-primary');
+                    }
+                };
+                const holder = document.createElement('div');
+
+                const editButton = document.createElement('button');
+                editButton.classList = 'btn border-round text-white box-shadow-inset bg-secondary border-0 w-30px h-30px position-absolute right-0 top-0';
+                const editIcon = document.createElement('span');
+                editIcon.classList = 'fs-20px line-height-1';
+                editIcon.innerHTML = '&#x270E;';
+                editButton.append(editIcon);
+                editButton.addEventListener('click', ()=>{
+                    holder.replaceWith(singleScript({script,editing:true}));
+                });
+                const saveButton = document.createElement('button');
+                saveButton.classList = 'btn border-round text-white box-shadow-inset bg-secondary border-0 w-40px h-40px';
+                const saveIcon = document.createElement('span');
+                saveIcon.classList = 'fs-20px line-height-1 text-white';
+                saveIcon.innerHTML = '&#x2714;';
+                saveButton.append(saveIcon);
+                saveButton.setAttribute("disabled", "disabled");
+                saveButton.addEventListener('click', async()=>{
+                    if(adding){
+                        const response = await dataLoads.addScript({script:updatedScript})
+                        if(response.status=='success'){
+                            script = JSON.parse(JSON.stringify(updatedScript));
+                            scripts = [script, ...scripts];
+                            scriptsManipulation(scripts,null);
+                            controllers.notify({data:"Script Added" ,type:'success'});
+                        }else{
+                            controllers.notify({data:response.message ,type:'danger'});
+                        }
+                        holder.replaceWith(singleScript({script,editing:false}));
+                    }else{
+                        const response = await dataLoads.updateScript({id:script.id,script:updatedScript});
+                        if(response.status=='success'){
+                            script = JSON.parse(JSON.stringify(updatedScript));
+                            holder.replaceWith(singleScript({script:updatedScript,editing:false}));
+                            controllers.notify({data:"Script Updated" ,type:'success'});
+                        }else{
+                            controllers.notify({data:response.message ,type:'danger'});
+                        }
+                        holder.replaceWith(singleScript({script,editing:false}));
+                    }
+                });
+
+                const cancelButton = document.createElement('button');
+                cancelButton.classList = 'btn text-white box-shadow-inset bg-secondary p-10px border-0 border-radius-10px';
+                const cancelIcon = document.createElement('span');
+                cancelIcon.classList = 'fs-20px line-height-1';
+                cancelIcon.innerText = 'Cancel';
+                cancelButton.append(cancelIcon);
+                cancelButton.addEventListener('click', ()=>{
+                    if(adding){
+                        holder.replaceWith(addNew());
+                    }else{
+                        holder.replaceWith(singleScript({script,editing:false}));
+                    }
+                    
+                });
+
+                const deleteButton = document.createElement('button');
+                deleteButton.classList = 'btn border-round text-white box-shadow-inset bg-secondary border-0 w-40px h-40px';
+                const deleteIcon = document.createElement('span');
+                deleteIcon.classList = 'fs-20px line-height-1 text-danger';
+                deleteIcon.innerHTML = '&#x2716;';
+                deleteButton.append(deleteIcon);
+                deleteButton.addEventListener('click', async()=>{
+                    const confirmationPopup = popups.confirmation({
+                        title:'Are you sure?',
+                        message:'Do you want to delete this script?',
+                        callback:async ()=>{
+                            const response = await dataLoads.deleteScript({id:script.id});
+                            if(response.status=='success'){
+                                holder.remove();
+                            }else{
+                                controllers.notify({data:response.message ,type:'danger'});
+                            }
+                            // state false
+                            controllers.popup({state: false});
+                        }
+                    });
+                    controllers.popup({
+                        state:true,
+                        content: confirmationPopup,
+                        options: {
+                            removeButton: true,
+                            backDrop: false,
+                        }
+                    });
+                });
+
+                if(!editing){
+                    holder.classList = 'p-5px bg-dark border-radius-5px m-5px box-shadow-inset cursor-pointer position-relative';
+                    
+                    const topHolder = document.createElement('div');
+                    topHolder.classList = 'show-button-on-hover';
+                    const scriptTitle = document.createElement('div');
+                    scriptTitle.classList = 'text-info font-sub p-5px';
+                    scriptTitle.innerText = script.options.name || script.code;
+                    topHolder.append(scriptTitle, editButton);
+                    const scriptContent = document.createElement('div');
+                    scriptContent.classList = 'text-white font-sub box-shadow-inset p-10px  cursor-pointer break-word ';
+                    scriptContent.innerText = script.content;
+                    scriptContent.addEventListener('click', (e)=>{
+                        const message = e.target.innerText;
+                        const textarea = document.querySelector('#messagInputArea');
+                        textarea.value = message;
+                        textarea.focus();
+                    });
+                    holder.append(topHolder, scriptContent);
+                }else{
+                    holder.classList = 'p-5px bg-secondary border-radius-5px m-10px box-shadow-inset';
+                    const nameValue = script.options.name;
+                    const groupValue = script.options.group;
+                    const codeValue = script.code;
+                    const contentValue = script.content;
+                    const name = inputWithText({
+                        height: 60,
+                        value: nameValue,
+                        text: 'Name',
+                        type: 'text',
+                    })
+                    name.oninput = (e)=>{
+                        updatedScript.options.name = e.target.value;
+                        checkScript();
+                    };
+                    const group = inputWithText({
+                        height: 60,
+                        value: groupValue,
+                        text: 'Group',
+                        type: 'text',
+                    });
+                    group.oninput = (e)=>{
+                        updatedScript.options.group = e.target.value;
+                        checkScript();
+                    }
+                    const code = inputWithText({
+                        height: 60,
+                        value: codeValue,
+                        text: 'Code',
+                        type: 'text',
+                    });
+                    code.oninput = (e)=>{
+                        updatedScript.code = e.target.value;
+                        checkScript();
+                    }
+                    const content = inputWithText({
+                        height: 200,
+                        value: contentValue,
+                        text: 'Content',
+                        type: 'text',
+                        tag: 'textarea',
+                    });
+                    content.oninput = (e)=>{
+                        updatedScript.content = e.target.value;
+                        checkScript();
+                    }
+                    const actions = document.createElement('div');
+                    actions.classList = 'd-flex justify-content-around align-items-center';
+                    actions.append(adding?'':deleteButton, cancelButton, saveButton);
+                    holder.append(name, group, code, content,actions);
+                }
+                return holder;
+            };
+            
+            for(const script of scripts){
+                if(groupName!=null){
+                    if(script.options.group!=groupName){
+                        continue;
+                    }
+                }
+                messageScriptSection.append(singleScript({script,editing:false}));
+            }
+
+        };
+        scriptsManipulation(scripts,null);
+
+        
+
         
     },
     mondayItem: ({itemData,choice})=>{
@@ -2029,8 +2324,8 @@ const controllers = {
             mainHolder.append(title,buttonHolder);
 
             const workHours = {
-                'regular':[9,10,11,12,16,17,18],
-                'weekend':[10,11,12,15,16],
+                'regular':[9,10,11,12,14,15,16,17,18],
+                'weekend':[10,11,12,13,14],
                 'all':[9,10,11,12,13,14,15,16,17,18],
             }
             const changeInputValues = (e)=>{

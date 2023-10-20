@@ -298,6 +298,54 @@ router.post('/messageScript', async (req, res) => {
     });
     res.json(scripts);
 });
+// deleteScript
+router.post('/deleteScript', async (req, res) => {
+    const id = req.fields.id;
+    try{
+        await Script.destroy({
+            where: {
+                id: id
+            }
+        });
+        res.json({status: 'success'});
+    }catch(e){
+        res.json({status:'error',message:'Unable to delete this script'})
+    }
+});
+// addScript
+router.post('/addScript', async (req, res) => {
+    const {content, code, options} = req.fields.script;
+    
+    try{
+        const script = await Script.create({
+            content,
+            code,
+            options
+        });
+        res.json({status: 'success', script});
+    }catch(e){
+        res.json({status:'error',message:'Unable to add this script'})
+    }
+});
+// updateScript
+router.post('/updateScript', async (req, res) => {
+    const {id, content, code, options} = req.fields.script;
+    try{
+        const script = await Script.update({
+            content,
+            code,
+            options
+        },{
+            where: {
+                id: id
+            }
+        });
+        res.json({status: 'success',script});
+    }catch(e){
+        res.json({status:'error',message:'Unable to update this script'})
+    }
+});
+
 // sendMessage--SOCKET
 router.post('/sendMessage', async (req, res) => {
     const item_id = req.fields.item_id;
