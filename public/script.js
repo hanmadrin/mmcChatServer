@@ -1630,22 +1630,30 @@ const controllers = {
                         if(response.status=='success'){
                             script = JSON.parse(JSON.stringify(updatedScript));
                             scripts = [script, ...scripts];
-                            scriptsManipulation(scripts,null);
+                            scriptsManipulation(scripts,script.options.group);
                             controllers.notify({data:"Script Added" ,type:'success'});
                         }else{
                             controllers.notify({data:response.message ,type:'danger'});
                         }
-                        holder.replaceWith(singleScript({script,editing:false}));
+                        // holder.replaceWith(singleScript({script,editing:false}));
                     }else{
                         const response = await dataLoads.updateScript({id:script.id,script:updatedScript});
                         if(response.status=='success'){
                             script = JSON.parse(JSON.stringify(updatedScript));
-                            holder.replaceWith(singleScript({script:updatedScript,editing:false}));
+                            const scriptIndex =( ()=>{
+                                for(let i=0;i<scripts.length;i++){
+                                    if(scripts[i].id==script.id){
+                                        return i;
+                                    }
+                                }
+                            })();
+                            scripts[scriptIndex] = script;
+                            scriptsManipulation(scripts,script.options.group);
                             controllers.notify({data:"Script Updated" ,type:'success'});
                         }else{
                             controllers.notify({data:response.message ,type:'danger'});
                         }
-                        holder.replaceWith(singleScript({script,editing:false}));
+                        // holder.replaceWith(singleScript({script,editing:false}));
                     }
                 });
 
