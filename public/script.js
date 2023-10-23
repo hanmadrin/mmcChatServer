@@ -2134,7 +2134,7 @@ const controllers = {
         };
         removePopup();
         if(state){
-            popup.classList = 'h-100vh w-100vw d-flex flex-column justify-content-center align-items-center position-fixed top-0 left-0';
+            popup.classList = 'h-100vh w-100vw d-flex flex-column justify-content-center align-items-center position-fixed top-0 left-0 zindex-1';
             popup.style.backgroundColor = options.backDropColor;
             const popupContent = document.createElement('div');
             popupContent.append(content);
