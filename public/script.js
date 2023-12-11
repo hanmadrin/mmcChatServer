@@ -3793,7 +3793,7 @@ const pages = {
             })();
             const statusName = (()=>{
                 try{
-                    JSON.parse(allAutomationBoardStatuses.find(status=>status.id==currentBoardSelectValue).columns[0].settings_str).labels[statusSelectValue]
+                    return JSON.parse(allAutomationBoardStatuses.find(status=>status.id==currentBoardSelectValue).columns[0].settings_str).labels[statusSelectValue]
                 }catch(e){
                     return 'UNDEFINED';
                 }
@@ -3817,7 +3817,7 @@ const pages = {
             // globals.automationTimes
             const timeName = (()=>{
                 try{
-                    return globals.automationTimes.find(time=>time.id==timeSelectValue).name
+                    return globals.automationTimes.find(time=>time.value==timeSelectValue).title
                 }catch(e){
                     return 'UNDEFINED';
                 }
