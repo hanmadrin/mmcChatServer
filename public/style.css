@@ -526,8 +526,9 @@ body {
 }
 
 .box-shadow-inset-bottom {
-  box-shadow: inset 0 -1px 0 0 #30324e
+  box-shadow: inset 0 -1px 0 0 #ffffff
 }
+
 
 .box-shadow-inset {
   box-shadow: inset 0 0 0 1px #30324e
@@ -624,6 +625,9 @@ body {
 
 .line-height-30px {
   line-height: 30px
+}
+.line-height-40px {
+  line-height: 40px
 }
 
 .pointer-events-none {
@@ -791,7 +795,17 @@ body {
   padding-bottom: 20px
 }
 
-
+.m-auto{
+  margin: auto;
+}
+.mx-auto{
+  margin-left: auto;
+  margin-right: auto;
+}
+.my-auto{
+  margin-top: auto;
+  margin-bottom: auto;
+}
 .m-0 {
   margin: 0
 }
@@ -2266,4 +2280,17 @@ body {
 .show-button-on-hover:hover button{
   opacity: 1;
   pointer-events: all;
+}
+
+.dropdown-appearance-none{
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.border-bottom-1px{
+  border-bottom: 1px solid rgb(255, 255, 255);
+}
+.text-style-underline{
+  text-decoration: underline;
 }

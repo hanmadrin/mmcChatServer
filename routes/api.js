@@ -13,6 +13,42 @@ const ArchiveMessage = require('../models/ArchiveMessage');
 const Account = require('../models/Account');
 const Action = require('../models/Action');
 const Meta = require('../models/Meta');
+router.post('/addAutomationMeta', async (req, res) => {
+    const key = 'automationMeta';
+    const value = req.fields.data;
+    console.log(value);
+    // create 
+    const meta = await Meta.create({
+        key,
+        value
+    });
+    res.json({status: 'success', message: 'New Automation Added!', id: meta.id});
+});
+// getAllAutomationMeta
+router.post('/getAllAutomationMeta', async (req, res) => {
+    const key = 'automationMeta';
+    const metas = await Meta.findAll({
+        where: {
+            key
+        }
+    });
+    if(metas.length>0){
+        res.json(metas);
+    }else{
+        res.json([]);
+    }
+});
+// deleteAutomationMeta
+router.post('/deleteAutomationMeta', async (req, res) => {
+    const id = req.fields.id;
+    await Meta.destroy({
+        where: {
+            id
+        }
+    });
+    res.json({status: 'success', message: 'Automation Deleted!'});
+});
+
 router.post('/getHealthMeta', async (req, res) => {
     const key = req.fields.key;
     console.log(key)
