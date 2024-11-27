@@ -19,6 +19,7 @@ const waitingTime = 300*1000;
 let i = 0;
 router.post('/getNewItemId', async (req, res) => {
     const device_id = req.query.device_id || req.fields.device_id;
+    const fireMode = req.query.fireMode || req.fields.fireMode; 
     if(!device_id){
         res.json({
             action: 'setDeviceId'
@@ -74,8 +75,9 @@ router.post('/getNewItemId', async (req, res) => {
                         hourFilteredData.push(data);
                     }
                 }
+                
 
-                if(hourFilteredData.length > 0){
+                if(hourFilteredData.length > 0 || fireMode){
                     const data = hourFilteredData[0];
                     item.status = device_id;
                     await item.save();
