@@ -1096,7 +1096,7 @@ const dataLoads = {
         const query = `
             query{
                 boards(ids:[${globals.mondayFetch.borEffortBoardId}]){
-                    items_page(limit:500,ids:[${allIds.map(id => `${id}`)}]){
+                    items_page(limit:500,query_params:{ids:[${allIds.map(id => `${id}`)}]}){
                         items{
                             id
                         }
