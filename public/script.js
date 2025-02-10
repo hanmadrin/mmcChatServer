@@ -264,24 +264,32 @@ const complexes = {
     }
 };
 const functions = {
-    mondayFetch: async (query, files = null, version = '2023-07') => {
+    mondayFetch: async (query,files=null,version='2024-01') => {
         const headers = new Headers();
-        // headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', localStorage.getItem('Authorization'));
+        headers.append('Content-Type', 'application/graphql-response+json');
+        headers.append('Authorization', 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjE3MjU1MTMxNiwiYWFpIjoxMSwidWlkIjozMDI3MzE5NCwiaWFkIjoiMjAyMi0wNy0yN1QyMzowMzowNC4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6ODg0NzExMCwicmduIjoidXNlMSJ9.2PvRpJ9AV5EXAG-hvNuohNeAxsodfODm4exO3lNwSbg');
         headers.append('API-Version', version);
 
         const formData = new FormData();
         formData.append('query', query);
-        if (files) {
+        if(files){
             formData.append('variables[file]', files);
+        }
+        const payload = {
+            query,
+        }
+        if(files){
+            payload.variables = {
+                file: files
+            }
         }
         const request = {
             method: 'POST',
             headers,
-            body: formData
+            body: JSON.stringify(payload)
         }
-        const mondayResponse = await fetch(
-            `https://api.monday.com/v2`,
+        const mondayResponse = await fetch (
+            "https://api.monday.com/v2",
             request
         );
         return mondayResponse;
