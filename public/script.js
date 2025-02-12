@@ -3072,7 +3072,7 @@ const pages = {
                             query{
                                 boards(ids:[${globals.mondayFetch.borEffortBoardId}]){
                                     groups(ids:"${groupId}"){
-                                        items_page{
+                                        items_page(limit:500){
                                             items{
                                                 name
                                                 id,
