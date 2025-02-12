@@ -3093,7 +3093,7 @@ const pages = {
                         items.forEach(item => {
                             console.log(`${item.id} ${item.column_values[0].value}`);
                         });
-                        const verifiedItems = items.filter(item => JSON.parse(item.column_values[0].value).index == globals.mondayFetch.statuses.borEffortBoard.verified);
+                        const verifiedItems = items.filter(item => JSON.parse(item.column_values[0].value)?.index == globals.mondayFetch.statuses.borEffortBoard.verified);
                         const verifiedItemIds = verifiedItems.map(item => item.id);
                         if (verifiedItemIds.length > 0) {
                             console.log(`Verified items length ${verifiedItemIds.length}`);
