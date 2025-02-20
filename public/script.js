@@ -685,6 +685,10 @@ const dataLoads = {
                 itemObj[items[i].item_id] = items[i].has_unread_message;
                 lastMessageObj[items[i].item_id] = items[i].last_message;
             }
+            item_ids_sliced = [];
+            while (item_ids.length) {
+                item_ids_sliced.push(item_ids.splice(0, 100));
+            }
             // console.log(itemObj);
             // const query = `
             //     query {
@@ -699,26 +703,49 @@ const dataLoads = {
             //         }
             //     }
             // `;
+            // const query = `
+            //     query {
+            //         boards(ids:[${globals.mondayFetch.borEffortBoardId}]){
+            //             items_page(limit:500,query_params:{ids:[${item_ids}]}){
+            //                 items{
+            //                     name,
+            //                     id,
+            //                     column_values(ids:["${globals.mondayFetch.columnValuesIds.borEffortBoard.status}"]){
+            //                         text
+            //                     }
+            //                 }
+            //             }
+            //         }
+            //     }
+            // `;
             const query = `
                 query {
                     boards(ids:[${globals.mondayFetch.borEffortBoardId}]){
-                        items_page(limit:500,query_params:{ids:[${item_ids}]}){
-                            items{
-                                name,
-                                id,
-                                column_values(ids:["${globals.mondayFetch.columnValuesIds.borEffortBoard.status}"]){
-                                    text
+                        ${item_ids_sliced.map((ids, index) => `
+                            items_page_${index}: items_page(limit:100,query_params:{ids:[${ids.join(',')}]}){
+                                items{
+                                    name,
+                                    id,
+                                    column_values(ids:["${globals.mondayFetch.columnValuesIds.borEffortBoard.status}"]){
+                                        text
+                                    }
                                 }
                             }
-                        }
-                    }
+                        `).join('')}
+                    }    
                 }
             `;
             const mondayItemsDataJson = await functions.mondayFetch(query);
             const mondayItemsdata = await mondayItemsDataJson.json();
             // const mondayItems = mondayItemsdata.data.boards[0].items;
             // const finalItems= [];
-            const mondayItems = mondayItemsdata.data.boards[0].items_page.items;
+            // const mondayItems = mondayItemsdata.data.boards[0].items_page.items;
+            const mondayItems = [];
+            for (let i = 0; i < item_ids_sliced.length; i++) {
+                mondayItems.push(...mondayItemsdata.data.boards[0][`items_page_${i}`].items);
+
+            }
+            
             const finalItems = [];
 
             for (let i = 0; i < mondayItems.length; i++) {
