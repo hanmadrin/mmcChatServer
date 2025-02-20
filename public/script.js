@@ -4200,6 +4200,8 @@ const view = async () => {
         await pages.laserAutovinActivities();
     } else if ((path == '/mondayManagement' || path == '/mondayManagement/') && admins.includes(userName)) {
         await pages.mondayManagement();
+    }else if ((path == '/logout' || path == '/logout/')) {
+        await pages.logout();
     } else {
         await pages.notFound();
     }
