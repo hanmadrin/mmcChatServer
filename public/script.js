@@ -745,7 +745,7 @@ const dataLoads = {
                 mondayItems.push(...mondayItemsdata.data.boards[0][`items_page_${i}`].items);
 
             }
-            
+
             const finalItems = [];
 
             for (let i = 0; i < mondayItems.length; i++) {
@@ -3271,6 +3271,7 @@ const pages = {
             accountControlLink: 'Automation Account Control',
             dashboard: 'Dashboard',
             itemsView: 'Raw Items View',
+            logout: 'Logout'
         }
         main.replaceChildren();
         for (const link in linksData) {
@@ -4165,6 +4166,10 @@ const pages = {
         setupSection.append(topSection, allAutomationSection);
         controllers.popup({ state: false });
 
+    },
+    logout: async () => {
+        localStorage.clear();
+        window.location.href = '/';
     },
 };
 // window.history.pushState({}, '', `/account/${fb_id}`);
