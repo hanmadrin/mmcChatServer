@@ -17,7 +17,7 @@ const ArchiveMessage = db.define('archiveMessage',{
         allowNull: false
     },
     message: {
-        type: sequelize.STRING(1000),
+        type: sequelize.STRING(5000),
         allowNull: false
     },
     fb_id:{

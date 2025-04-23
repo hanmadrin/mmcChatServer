@@ -17,7 +17,7 @@ const Message = db.define('message',{
         allowNull: false
     },
     message: {
-        type: sequelize.STRING(1000),
+        type: sequelize.STRING(5000),
         allowNull: false
     },
     fb_id:{
