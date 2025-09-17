@@ -445,7 +445,7 @@ router.post('/getActivities', async (req, res) => {
         where:{
             action: 'send_message',
             timestamp:{
-                [Sequelize.Op.gt]: new Date().getTime() - 1000 * 60 * 60 * 8
+                [Sequelize.Op.gt]: new Date().getTime() - 1000 * 60 * 60 * 30
             }
         }
     });

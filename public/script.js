@@ -2532,8 +2532,8 @@ const controllers = {
         controlHolder.append(controlBoard);
         return controlHolder;
     },
-    activityVisualizer: (data, newMessage) => {
-        const hourCount = 8;
+    activityVisualizer: (data, newMessage,hourCountRef = 8) => {
+        const hourCount = hourCountRef;
         const height = 800;
         const width = 1500;
         const holder = document.createElement('div');
@@ -3454,7 +3454,7 @@ const pages = {
         const activitiesData = await dataLoads.getActivities();
         const main = document.getElementById('main');
         main.replaceChildren();
-        const visual = controllers.activityVisualizer(activitiesData.fieldRepActivities, activitiesData.messageActivities);
+        const visual = controllers.activityVisualizer(activitiesData.fieldRepActivities, activitiesData.messageActivities, 30);
         main.append(visual);
         // console.log(activities);
         controllers.popup({ state: false });
