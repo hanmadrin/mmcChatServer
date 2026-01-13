@@ -265,9 +265,9 @@ const complexes = {
     }
 };
 const functions = {
-    mondayFetch: async (query,files=null,version='2024-01') => {
+    mondayFetch: async (query,files=null,version='2026-01') => {
         const headers = new Headers();
-        headers.append('Content-Type', 'application/graphql-response+json');
+        headers.append('Content-Type', 'application/json');
         headers.append('Authorization', 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjYwNjM1NDk2OCwiYWFpIjoxMSwidWlkIjozMDI3MzE5NCwiaWFkIjoiMjAyNi0wMS0xMlQxNDo1NDo1NC4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6ODg0NzExMCwicmduIjoidXNlMSJ9.Ktk1F5RanMKS6NxEmd-59G_wg64Ab5lEt2O-6U2lNt0');
         headers.append('API-Version', version);
 
