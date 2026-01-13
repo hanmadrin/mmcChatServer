@@ -18,6 +18,7 @@ app.use('/api', require('./routes/api'));
 app.use('/extension', require('./routes/extension'));
 app.use('/vauto', require('./routes/vauto'));
 app.use('/socket', require('./routes/socket'));
+app.use('/ai', require('./routes/ai'));
 app.use('/public',express.static('./public'));
 const ExpressError = require('./utilities/expressError');
 // app.use('/public/:name', (req, res) => {
